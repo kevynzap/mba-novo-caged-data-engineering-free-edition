@@ -6,10 +6,14 @@
 ## 1. Estado das Entregas
 
 **Novo Caged**
-- Landing, Bronze e Silver de movimentações formais desenvolvidas.
-- Gold semestral disponível para análise.
-- Reprocessamento e testes realizados via job realizados com sucesso.
-- Pendência de documentação do catalogo de cada delta.
+- **010_verificar_novos_arquivos_caged:** realiza uma verificação no FTP para identificar novos arquivos.
+- **011_landing_to_bronze:** extração e persitência dos dados na camada bronze.
+- **012_dicionarios_referencia_caged:** leitura e captura de um arquivo .xlsx referente ao dicionario de dados do caged (docs/dicionario_dados) e persistência dos dados na camada bronze.
+- **020_bronze_to_silver_caged:** tratamento e validação.
+- **021_analise_qualidade_bronze_caged:** analise da qualidade dos dados contidos na camada bronze para posterior criação da delta na camada silver (020_bronze_to_silver_caged).
+- **022_bronze_to_silver_ref_caged:** criação da camada silver das dimensões de referência do caged.
+- **030_silver_to_gold_caged:** construção da camada analitica com granularidade semestral.
+
 
 **INEP - Educação Superior**
 - **013_donwload_landing_inep:** captura dos microdados oficiais.
