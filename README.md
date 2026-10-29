@@ -82,7 +82,11 @@ mba-novo-caged-data-engineering-free-edition/
 ├── job-settings-novo-caged.json
 │
 ├── docs/
-│   └── dicionario-dados-novo-caged-movimentacao.xlsx
+│   ├── dicionario_dados
+│   │   ├── dicionario-dados-novo-caged-movimentacao.xlsx
+│   │ 
+│   └── status_entrega
+│   │   ├── arquitetura-pipelines-inep-caged.md
 │
 ├── notebooks/
 │   ├── 00_setup/
