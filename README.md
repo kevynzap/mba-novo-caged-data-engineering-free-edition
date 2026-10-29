@@ -4,6 +4,7 @@
 **Projeto:** Engenharia de Dados aplicada aos microdados do Novo Caged e Educação Formal
 
 **Organização do trabalho:** [Trello — MBA | Previsão da Demanda por Ocupações](https://trello.com/b/sts8EjN4)
+**Documentação Status Projeto:** docs/status_entregas
 
 ## Problema de negócio
 
