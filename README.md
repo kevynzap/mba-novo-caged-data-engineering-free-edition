@@ -5,7 +5,8 @@
 
 **Organização do trabalho:** [Trello — MBA | Previsão da Demanda por Ocupações](https://trello.com/b/sts8EjN4)
 
-**Documentação Status Projeto:** docs/status_entregas
+**Documentação Status Projeto:** docs/status_entregas  
+**Glossário de dados:** docs/dicionario_dados/glossario_de_dados.md
 
 ## Problema de negócio
 
@@ -84,6 +85,7 @@ mba-novo-caged-data-engineering-free-edition/
 ├── docs/
 │   ├── dicionario_dados
 │   │   ├── dicionario-dados-novo-caged-movimentacao.xlsx
+│   │   └── glossario_de_dados.md
 │   │ 
 │   └── status_entrega
 │   │   ├── arquitetura-pipelines-inep-caged.md
@@ -91,20 +93,28 @@ mba-novo-caged-data-engineering-free-edition/
 ├── notebooks/
 │   ├── 00_setup/
 │   │   ├── 01_create_catolog_schema.ipynb
-│   │   └── 02_commom_functions.py
+│   │   └── 02_commom_functions.ipynb
 │   │
 │   ├── 01_ingestao/
-│   │   ├── 010_verificar_novos_arquivos.ipynb
-│   │   ├── 011_landing_to_bronze.ipynb
-│   │   └── 012_dicionarios_referencia.ipynb
+│   │   ├── 010_verificar_novos_arquivos_caged.ipynb
+│   │   ├── 011_landing_to_bronze_caged.ipynb
+│   │   ├── 012_dicionarios_referencia_caged.ipynb
+│   │   ├── 013_download_landing_inep.ipynb
+│   │   └── 014_landing_to_bronze_inep.ipynb
 │   │
 │   ├── 02_transformacao/
 │   │   ├── 020_bronze_to_silver_caged.ipynb
 │   │   ├── 021_analise_qualidade_bronze_caged.ipynb
-│   │   └── 022_bronze_to_silver_ref.ipynb
+│   │   ├── 022_bronze_to_silver_ref_caged.ipynb
+│   │   ├── 023_analise_qualidade_inep.ipynb
+│   │   └── 024_bronze_to_silver_inep.ipynb
 │   │
 │   └── 03_analytics/
 │       ├── 030_silver_to_gold_caged.ipynb
+│       ├── 031_silver_to_gold_inep.ipynb
+│       ├── 0311_silver_to_gold_inep_analise.ipynb
+│       ├── 032_mapeamento_cine_cbo.ipynb
+│       ├── 033_construcao_bridge_cine_cbo.ipynb
 │       └── EDA.ipynb
 │
 ├── src/
@@ -128,7 +138,7 @@ A Landing utiliza um volume do Unity Catalog:
 
 Os arquivos oficiais do Novo Caged são recebidos no formato `.7z`, organizados por ano e competência.
 
-O notebook `010_verificar_novos_arquivos.ipynb` consulta o FTP público, identifica novas competências e registra as informações para o processamento posterior.
+O notebook `010_verificar_novos_arquivos_caged.ipynb` consulta o FTP público, identifica novas competências e registra as informações para o processamento posterior.
 
 O fluxo desenvolvido contempla a identificação e o download de novas competências do ano vigente. Revisões retroativas de arquivos já ingeridos exigem uma estratégia complementar.
 
@@ -138,7 +148,7 @@ A tabela principal é:
 
 `workspace.bronze.novo_caged_movimentacoes`
 
-O notebook `011_landing_to_bronze.ipynb` realiza a extração dos arquivos, a leitura com Apache Spark, a inclusão de metadados de ingestão e a gravação em Delta Lake.
+O notebook `011_landing_to_bronze_caged.ipynb` realiza a extração dos arquivos, a leitura com Apache Spark, a inclusão de metadados de ingestão e a gravação em Delta Lake.
 
 A estrutura permite processamento por competência e sobrescrita seletiva dos períodos processados.
 
@@ -149,7 +159,7 @@ Entre os metadados preservados estão:
 - Caminho do arquivo original.
 - Data e horário de ingestão.
 
-O notebook `012_dicionarios_referencia.ipynb` também disponibiliza na Bronze os dicionários oficiais do Novo Caged, preservando os códigos e as descrições fornecidos pela fonte.
+O notebook `012_dicionarios_referencia_caged.ipynb` também disponibiliza na Bronze os dicionários oficiais do Novo Caged, preservando os códigos e as descrições fornecidos pela fonte.
 
 **Decisão arquitetural:** as referências são inicialmente armazenadas na Bronze porque suas descrições e representações podem exigir tratamento e padronização antes do uso em camadas analíticas.
 
@@ -170,7 +180,7 @@ O notebook `020_bronze_to_silver_caged.ipynb` implementa:
 - Preservação dos metadados de rastreabilidade.
 - Reprocessamento seletivo por competência.
 
-O notebook `022_bronze_to_silver_ref.ipynb` trata e disponibiliza dez tabelas de referência tipadas em `workspace.silver`.
+O notebook `022_bronze_to_silver_ref_caged.ipynb` trata e disponibiliza dez tabelas de referência tipadas em `workspace.silver`.
 
 #### Decisões de qualidade
 
@@ -219,7 +229,7 @@ O processamento considera somente semestres com seis competências mensais dispo
 
 O notebook também implementa validações de unicidade, consistência das métricas e reconciliação dos totais com a Silver, além de recomputação e substituição da tabela Delta para permitir reexecuções sem duplicar os resultados.
 
-**Status:** notebook desenvolvido e versionado; as evidências finais de execução e homologação no workspace devem ser confirmadas.
+**Status:** notebook desenvolvido e versionado; validado em 31/10/2026 contra os dados do workspace — a fato cobre 2021S1–2026S1 com apenas semestres completos (2026S2, parcial com apenas jul–ago, permanece excluída).
 
 #### Decisões metodológicas para a Gold
 
@@ -229,29 +239,60 @@ O notebook também implementa validações de unicidade, consistência das métr
 - Semestres incompletos serão excluídos da fato definitiva.
 - A Silver continuará disponível na granularidade original, permitindo estudos mensais posteriores.
 
+## Camadas de dados — INEP (Censo da Educação Superior)
+
+Os microdados do Censo da Educação Superior do INEP seguem o mesmo padrão Medallion:
+
+**Landing/Bronze:** os notebooks `013_download_landing_inep.ipynb` e `014_landing_to_bronze_inep.ipynb` baixam e ingerem os microdados por curso na tabela `workspace.bronze.inep_superior_cursos`, preservando os nomes originais do dicionário INEP (cerca de 200 colunas, todas STRING) e metadados de ingestão (`arquivo_origem`, `ano_ingestao`, `hash_origem`, `dt_ingestao`).
+
+**Silver:** o notebook `023_analise_qualidade_inep.ipynb` documenta as análises de qualidade da base educacional. O `024_bronze_to_silver_inep.ipynb` produz a tabela `workspace.silver.inep_superior_cursos`, tipada e enriquecida, com a classificação CINE Brasil em quatro níveis, características da IES e do curso, e métricas agregadas (vagas, inscritos, ingressantes, matrículas, concluintes).
+
+**Gold:** o notebook `031_silver_to_gold_inep.ipynb` constrói as tabelas:
+
+- `workspace.gold.dim_cine_brasil` — dimensão da classificação CINE Brasil em quatro níveis (área geral → específica → detalhada → rótulo).
+- `workspace.gold.fato_inep_educacao_brasil_anual` — fato anual para o Brasil (grão: ano × rótulo CINE × modalidade de ensino).
+- `workspace.gold.fato_inep_educacao_uf_anual` — fato anual por UF (mesmo grão acrescido da UF; métricas de vagas restritas a cursos presenciais).
+
+O notebook `0311_silver_to_gold_inep_analise.ipynb` registra as validações da Gold educacional.
+
+**Cobertura:** Censos de 2021 a 2024.
+
+**Correspondência CINE × CBO:** os notebooks `032_mapeamento_cine_cbo.ipynb` e `033_construcao_bridge_cine_cbo.ipynb` constroem a ponte entre as áreas de formação (CINE) e as ocupações do mercado formal (CBO 2002), viabilizando a integração com a fato do Caged.
+
+A documentação detalhada de todas as tabelas está no [glossário de dados](docs/dicionario_dados/glossario_de_dados.md).
+
 ## Integração com educação formal
 
 A proposta do projeto contempla relacionar os indicadores do mercado de trabalho à disponibilidade e à formação de profissionais no Brasil.
 
-A base educacional considerada possui periodicidade semestral. Entretanto, seus campos, classificações e granularidade geográfica ainda precisam ser documentados antes da integração.
+A base educacional utilizada é o **Censo da Educação Superior do INEP**, com periodicidade **anual** e cobertura de 2021 a 2024 nos microdados ingeridos. Campos, classificações (CINE Brasil em quatro níveis) e granularidade geográfica (Brasil e UF) estão documentados no [glossário de dados](docs/dicionario_dados/glossario_de_dados.md).
 
 Um desafio metodológico é relacionar classificações de cursos ou áreas de formação às ocupações da **Classificação Brasileira de Ocupações (CBO)**.
 
 Essa correspondência não deve ser presumida como direta: uma formação pode estar associada a várias ocupações, e uma ocupação pode reunir profissionais de diferentes formações.
 
-A integração exigirá uma regra de correspondência justificada, possivelmente utilizando grupos ou famílias ocupacionais, evitando multiplicações indevidas nas medidas agregadas.
+A correspondência é construída pelos notebooks `032_mapeamento_cine_cbo.ipynb` e `033_construcao_bridge_cine_cbo.ipynb`, que implementam a bridge CINE × CBO no nível de rótulo, evitando multiplicações indevidas nas medidas agregadas.
 
 ## Modelagem dimensional e Wide Table
 
 A arquitetura Gold deverá contemplar dois produtos analíticos complementares:
 
-**Modelo dimensional (Star Schema):** organização das fatos e dimensões para análise histórica de admissões, desligamentos, ocupações, regiões e indicadores educacionais.
+**Modelo dimensional (Star Schema):** organização das fatos e dimensões para análise histórica de admissões, desligamentos, ocupações, regiões e indicadores educacionais. Já implementadas na Gold: `dim_cbo_ocupacao`, `dim_cine_brasil`, `fato_caged_semestral`, `fato_inep_educacao_brasil_anual` e `fato_inep_educacao_uf_anual`.
 
 **Wide Table para Machine Learning:** consolidação das variáveis necessárias à previsão, respeitando a compatibilidade entre granularidades e a disponibilidade temporal das fontes.
 
 A proposta atual considera a previsão de admissões para um semestre futuro, utilizando indicadores históricos de emprego e educação. A definição final das variáveis explicativas, do horizonte de previsão e da granularidade ocupacional será realizada em conjunto com a equipe responsável pelo Machine Learning.
 
 Para evitar *data leakage*, cada observação deverá utilizar apenas informações disponíveis no momento em que a previsão seria realizada.
+
+## Glossário de dados
+
+A documentação de todas as tabelas das camadas bronze, silver e gold está consolidada em [docs/dicionario_dados/glossario_de_dados.md](docs/dicionario_dados/glossario_de_dados.md), incluindo:
+
+- Propósito, grão e colunas das 30 tabelas do data warehouse (excluindo FATEC).
+- Contexto de negócios das fontes oficiais (Novo CAGED/MTE e Censo da Educação Superior/INEP).
+- Verificação dos contextos contra os dados do workspace (executada em 31/10/2026).
+- Chaves de junção recomendadas entre fatos, dimensões e dicionários de referência.
 
 ## Orquestração e automação
 
@@ -275,12 +316,12 @@ As próximas atividades incluem:
 
 As principais atividades pendentes são:
 
-1. Homologar a fato Gold semestral e documentar os resultados das validações.
+1. Homologar a fato Gold semestral e documentar os resultados das validações (validações executadas em 31/10/2026 e registradas no glossário de dados).
 2. Revisar a estratégia incremental para identificar alterações em competências já ingeridas, inclusive quando suas contagens não mudarem.
 3. Atualizar e validar a configuração dos Databricks Jobs.
-4. Receber e analisar a estrutura da base de educação formal (Em desenvolvimento).
-5. Definir a correspondência entre cursos, áreas de formação e ocupações (Já realizados).
-6. Implementar o modelo dimensional e a Wide Table.
+4. Ingerir e analisar a base de educação formal (Concluído: Censo da Educação Superior 2021–2024 nas camadas bronze, silver e gold).
+5. Definir a correspondência entre cursos, áreas de formação e ocupações (Concluído: notebooks 032 e 033, bridge CINE × CBO).
+6. Implementar a Wide Table para Machine Learning (o modelo dimensional já está implementado).
 7. Desenvolver, treinar e avaliar os modelos preditivos.
 8. Construir as visualizações e o dashboard.
 9. Implementar testes automatizados, CI/CD e IaC.
