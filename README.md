@@ -257,7 +257,7 @@ O notebook `0311_silver_to_gold_inep_analise.ipynb` registra as validações da 
 
 **Cobertura:** Censos de 2021 a 2024.
 
-**Correspondência CINE × CBO:** os notebooks `032_mapeamento_cine_cbo.ipynb` e `033_construcao_bridge_cine_cbo.ipynb` constroem a ponte entre as áreas de formação (CINE) e as ocupações do mercado formal (CBO 2002), viabilizando a integração com a fato do Caged.
+**Correspondência CINE × CBO:** os notebooks `032_mapeamento_cine_cbo.ipynb` e `033_construcao_bridge_cine_cbo.ipynb` constroem a ponte entre as áreas de formação (CINE) e as ocupações do mercado formal (CBO 2002), materializada nas tabelas gold `bridge_cine_cbo_provisoria` (pares área específica × subgrupo CBO, com confiança e justificativa) e `bridge_cine_cbo_provisoria_cobertura` (diagnóstico de cobertura), viabilizando a integração com a fato do Caged.
 
 A documentação detalhada de todas as tabelas está no [glossário de dados](docs/dicionario_dados/glossario_de_dados.md).
 
@@ -277,7 +277,7 @@ A correspondência é construída pelos notebooks `032_mapeamento_cine_cbo.ipynb
 
 A arquitetura Gold deverá contemplar dois produtos analíticos complementares:
 
-**Modelo dimensional (Star Schema):** organização das fatos e dimensões para análise histórica de admissões, desligamentos, ocupações, regiões e indicadores educacionais. Já implementadas na Gold: `dim_cbo_ocupacao`, `dim_cine_brasil`, `fato_caged_semestral`, `fato_inep_educacao_brasil_anual` e `fato_inep_educacao_uf_anual`.
+**Modelo dimensional (Star Schema):** organização das fatos e dimensões para análise histórica de admissões, desligamentos, ocupações, regiões e indicadores educacionais. Já implementadas na Gold: `dim_cbo_ocupacao`, `dim_cine_brasil`, `fato_caged_semestral`, `fato_inep_educacao_brasil_anual`, `fato_inep_educacao_uf_anual`, `bridge_cine_cbo_provisoria` e `bridge_cine_cbo_provisoria_cobertura`.
 
 **Wide Table para Machine Learning:** consolidação das variáveis necessárias à previsão, respeitando a compatibilidade entre granularidades e a disponibilidade temporal das fontes.
 
@@ -289,7 +289,7 @@ Para evitar *data leakage*, cada observação deverá utilizar apenas informaç�
 
 A documentação de todas as tabelas das camadas bronze, silver e gold está consolidada em [docs/dicionario_dados/glossario_de_dados.md](docs/dicionario_dados/glossario_de_dados.md), incluindo:
 
-- Propósito, grão e colunas das 30 tabelas do data warehouse (excluindo FATEC).
+- Propósito, grão e colunas das 32 tabelas do data warehouse (excluindo FATEC), entre elas as bridges CINE × CBO.
 - Contexto de negócios das fontes oficiais (Novo CAGED/MTE e Censo da Educação Superior/INEP).
 - Verificação dos contextos contra os dados do workspace (executada em 31/10/2026).
 - Chaves de junção recomendadas entre fatos, dimensões e dicionários de referência.

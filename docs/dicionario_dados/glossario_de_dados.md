@@ -78,7 +78,7 @@ O projeto conecta **oferta educacional** (Censo INEP: ingressantes/concluintes p
 * Usar salário mediano de admissão (CAGED) como retorno médio ao mercado formal por ocupação, contrastando entre áreas de formação.
 * Recortes por UF para identificar desequilíbrios regionais de oferta/absorção.
 
-> As tabelas FATEC (`cursos_fatec`, `cursos_fatec_ocupacoes_cbo_2025`) fora do escopo deste glossário fazem exatamente essa ponte no nível curso×ocupação.
+> As tabelas FATEC (`cursos_fatec`, `cursos_fatec_ocupacoes_cbo_2025`) fora do escopo deste glossário fazem exatamente essa ponte no nível curso×ocupação. Na camada gold, a ponte CINE × CBO é materializada — em versão provisória, curada pela equipe e pendente de correspondência oficial do MEC — pelas tabelas `bridge_cine_cbo_provisoria` e `bridge_cine_cbo_provisoria_cobertura` (seções 3.6 e 3.7).
 
 ## Verificação dos contextos com os dados (executada em 31/10/2026)
 
@@ -324,6 +324,40 @@ As afirmações abaixo foram confrontadas com os dados reais das tabelas (o text
 | `hash_silver_origem`, `versao_silver_origem`, `registros_silver_origem` | string/int | Auditoria da origem em silver |
 | `versao_transformacao`, `dt_processamento` | string/timestamp | Auditoria da carga em gold |
 
+## 3.6 `workspace.gold.bridge_cine_cbo_provisoria`
+
+**Descrição:** Bridge (tabela de correspondência) entre a oferta educacional e o mercado formal: liga a **área específica CINE** (lado educação) ao **subgrupo principal CBO 2002** (lado ocupação). Grão: um registro por par área específica × subgrupo CBO. **Versão provisória**: mapeamento curado pela equipe (notebooks `032_mapeamento_cine_cbo` e `033_construcao_bridge_cine_cbo`), sem fonte oficial — `aprovado_oficial` é sempre `false` até existir correspondência oficial do MEC.
+
+| Coluna | Tipo | Descrição |
+| --- | --- | --- |
+| `codigo_cine_area_geral` / `nome_cine_area_geral` | string | Área geral CINE (contexto do par) |
+| `codigo_cine_area_especifica` / `nome_cine_area_especifica` | string | Chave do lado CINE: código de 3 dígitos da área específica |
+| `codigo_cbo_subgrupo` | string | Chave do lado CBO: subgrupo principal CBO (3 dígitos — dígitos 2 a 4 do código CBO 2002) |
+| `codigo_cbo_grande_grupo` | string | Grande grupo CBO (1º dígito, contexto) |
+| `exemplo_ocupacao` | string | Ocupação representativa do subgrupo (apenas ilustrativa) |
+| `tipo_mapeamento` | string | Sempre APROXIMADO nesta tabela — versão provisória sem fonte oficial |
+| `nivel_mapeamento` | string | Grão do par: `AREA_ESPECIFICA_X_SUBGRUPO_PRINCIPAL` |
+| `confianca` | string | Confiança do par: ALTA, MEDIA ou BAIXA |
+| `justificativa` | string | Justificativa textual do par, para auditoria |
+| `fonte_mapeamento` | string | Fonte do mapeamento (curada pela equipe, não oficial) |
+| `aprovado_oficial` | boolean | Sempre false — aguarda correspondência oficial do MEC |
+| `versao_mapeamento` | string | Versão do mapeamento provisório |
+| `dt_processamento` | timestamp | Data e hora da gravação |
+| `versao_transformacao` | string | Versão da transformação |
+
+## 3.7 `workspace.gold.bridge_cine_cbo_provisoria_cobertura`
+
+**Descrição:** Diagnóstico de cobertura do mapeamento provisório: para cada área específica CINE, quantos pares CBO foram mapeados e quais ficaram de fora (com motivo). Complementa a `bridge_cine_cbo_provisoria` na auditoria do cruzamento CINE × CBO. Grão: um registro por área específica × versão do mapeamento.
+
+| Coluna | Tipo | Descrição |
+| --- | --- | --- |
+| `codigo_cine_area_especifica` / `nome_cine_area_especifica` | string | Área específica CINE diagnosticada |
+| `posicao` | string | Situação da área no mapeamento (dentro/fora) |
+| `qtd_pares_cbo` | bigint | Quantidade de pares CBO mapeados para a área |
+| `motivo_fora` | string | Motivo pelo qual a área ficou fora do mapeamento (quando aplicável) |
+| `versao_mapeamento` | string | Versão do mapeamento diagnosticado |
+| `dt_processamento` | timestamp | Data e hora da gravação |
+
 ---
 
 ## Chaves de junção recomendadas
@@ -333,5 +367,8 @@ As afirmações abaixo foram confrontadas com os dados reais das tabelas (o text
 | `gold.fato_caged_semestral` ↔ `gold.dim_cbo_ocupacao` | `cbo2002_ocupacao` ↔ `codigo_cbo` (atenção ao zero à esquerda: converter com `LPAD`) |
 | `gold.fato_inep_*` ↔ `gold.dim_cine_brasil` | `codigo_cine_rotulo` |
 | `silver.novo_caged_movimentacoes` ↔ dicionários `ref_*` | colunas de código (ex.: `uf`, `cbo2002_ocupacao`, `tipo_movimentacao`) ↔ `codigo` |
+| `gold.bridge_cine_cbo_provisoria` ↔ `gold.dim_cine_brasil` | `codigo_cine_area_especifica` ↔ `codigo_cine_area_especifica` |
+| `gold.bridge_cine_cbo_provisoria` ↔ `gold.fato_caged_semestral` / `dim_cbo_ocupacao` | `codigo_cbo_subgrupo` (3 dígitos) ↔ dígitos 2 a 4 do código CBO 2002 — derivável com `LPAD(CAST(FLOOR(cbo2002_ocupacao/1000) % 1000 AS STRING), 3, '0')` |
+| `gold.bridge_cine_cbo_provisoria_cobertura` ↔ `bridge_cine_cbo_provisoria` | `codigo_cine_area_especifica` + `versao_mapeamento` |
 
 > **Observação:** `dim_cbo_ocupacao.codigo_cbo` é STRING de 6 dígitos; `fato_caged_semestral.cbo2002_ocupacao` e `silver` usam INT (perdem o zero à esquerda). Ao cruzar, use `CAST/LPAD` para alinhar os formatos.
