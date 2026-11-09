@@ -279,7 +279,7 @@ A arquitetura Gold deverá contemplar dois produtos analíticos complementares:
 
 **Modelo dimensional (Star Schema):** organização das fatos e dimensões para análise histórica de admissões, desligamentos, ocupações, regiões e indicadores educacionais. Já implementadas na Gold: `dim_cbo_ocupacao`, `dim_cine_brasil`, `fato_caged_semestral`, `fato_inep_educacao_brasil_anual`, `fato_inep_educacao_uf_anual`, `bridge_cine_cbo_provisoria` e `bridge_cine_cbo_provisoria_cobertura`.
 
-**Wide Table para Machine Learning:** consolidação das variáveis necessárias à previsão, respeitando a compatibilidade entre granularidades e a disponibilidade temporal das fontes.
+**Wide Table para Machine Learning:** consolidação das variáveis necessárias à previsão, respeitando a compatibilidade entre granularidades e a disponibilidade temporal das fontes. Implementada na Gold como `ml_features_mensal_uf_cbo` (grão mensal: competência × UF × subgrupo CBO), com suporte a: triagem estatística de features (`ml_features_ols_screening`, OLS com efeitos fixos de UF e mês), backtest por cutoffs móveis (`ml_backtest_admissoes`) e previsões versionadas (`previsoes_admissoes`, horizonte set/2026–ago/2027).
 
 A proposta atual considera a previsão de admissões para um semestre futuro, utilizando indicadores históricos de emprego e educação. A definição final das variáveis explicativas, do horizonte de previsão e da granularidade ocupacional será realizada em conjunto com a equipe responsável pelo Machine Learning.
 
@@ -289,7 +289,7 @@ Para evitar *data leakage*, cada observação deverá utilizar apenas informaç�
 
 A documentação de todas as tabelas das camadas bronze, silver e gold está consolidada em [docs/dicionario_dados/glossario_de_dados.md](docs/dicionario_dados/glossario_de_dados.md), incluindo:
 
-- Propósito, grão e colunas das 32 tabelas do data warehouse (excluindo FATEC), entre elas as bridges CINE × CBO.
+- Propósito, grão e colunas das 37 tabelas do data warehouse (excluindo FATEC), entre elas as bridges CINE × CBO e as tabelas de Machine Learning.
 - Contexto de negócios das fontes oficiais (Novo CAGED/MTE e Censo da Educação Superior/INEP).
 - Verificação dos contextos contra os dados do workspace (executada em 31/10/2026).
 - Chaves de junção recomendadas entre fatos, dimensões e dicionários de referência.
@@ -321,8 +321,8 @@ As principais atividades pendentes são:
 3. Atualizar e validar a configuração dos Databricks Jobs.
 4. Ingerir e analisar a base de educação formal (Concluído: Censo da Educação Superior 2021–2024 nas camadas bronze, silver e gold).
 5. Definir a correspondência entre cursos, áreas de formação e ocupações (Concluído: notebooks 032 e 033, bridge CINE × CBO).
-6. Implementar a Wide Table para Machine Learning (o modelo dimensional já está implementado).
-7. Desenvolver, treinar e avaliar os modelos preditivos.
+6. Implementar a Wide Table para Machine Learning (Concluído: `ml_features_mensal_uf_cbo`, com triagem e backtest).
+7. Desenvolver, treinar e avaliar os modelos preditivos (previsões geradas em 08/11/2026 em `previsoes_admissoes`; análise de desalinhamento em `desalinhamento_formacao_mercado`).
 8. Construir as visualizações e o dashboard.
 9. Implementar testes automatizados, CI/CD e IaC.
 10. Documentar como os requisitos de arquitetura Lambda e streaming serão atendidos ou demonstrados no escopo acadêmico.

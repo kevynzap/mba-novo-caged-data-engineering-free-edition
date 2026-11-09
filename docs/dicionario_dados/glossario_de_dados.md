@@ -13,11 +13,13 @@
 | --- | --- | --- |
 | `bronze` | Dados brutos, exatamente como extraídos da fonte | Todas as colunas como STRING; metadados de ingestão com prefixo `_` |
 | `silver` | Dados limpos e tipados | Códigos convertidos para tipos numéricos/datas; descrições enriquecidas via de-para com os dicionários `ref_*` (colunas `*_descricao`) |
-| `gold` | Modelo dimensional pronto para análise | Fatos (`fato_*`) e dimensões (`dim_*`), com colunas de auditoria (`dt_processamento`, `versao_transformacao`) |
+| `gold` | Modelo dimensional e tabelas analíticas de ML prontas para consumo | Fatos (`fato_*`), dimensões (`dim_*`), bridges (`bridge_*`) e tabelas de ML (`ml_*`, `previsoes_*` e análises), com colunas de auditoria (`dt_processamento`, `versao_transformacao`) |
 
 **Fluxo CAGED:** `bronze.novo_caged_movimentacoes` → `silver.novo_caged_movimentacoes` → `gold.fato_caged_semestral` (via `silver.novo_caged_movimentacoes_semestral`)
 
 **Fluxo INEP:** `bronze.inep_superior_cursos` → `silver.inep_superior_cursos` → `gold.fato_inep_educacao_brasil_anual` / `gold.fato_inep_educacao_uf_anual`
+
+**Fluxo ML (Wide Table → previsões):** `silver.novo_caged_movimentacoes` + fatos INEP (cruzadas via `bridge_cine_cbo_provisoria`) → `gold.ml_features_mensal_uf_cbo` → triagem de features (`ml_features_ols_screening`) → validação (`ml_backtest_admissoes`) → `gold.previsoes_admissoes` → análise de desalinhamento (`desalinhamento_formacao_mercado`)
 
 ---
 
@@ -245,7 +247,7 @@ As afirmações abaixo foram confrontadas com os dados reais das tabelas (o text
 
 ---
 
-# 3. Camada GOLD — modelo dimensional
+# 3. Camada GOLD — modelo dimensional e Machine Learning
 
 ## 3.1 `workspace.gold.dim_cbo_ocupacao`
 
@@ -358,6 +360,80 @@ As afirmações abaixo foram confrontadas com os dados reais das tabelas (o text
 | `versao_mapeamento` | string | Versão do mapeamento diagnosticado |
 | `dt_processamento` | timestamp | Data e hora da gravação |
 
+## 3.8 `workspace.gold.ml_features_mensal_uf_cbo`
+
+**Descrição:** Wide Table (tabela de features) para Machine Learning — a consolidação mensal prevista na arquitetura. Grão: **competência (mês) × UF × subgrupo principal CBO (3 dígitos)**, cobrindo somente subgrupos presentes na bridge. Variável-alvo: `admissoes` (admissões do mês). Cobertura: jan/2021–ago/2026. Features educacionais defasadas 1 a 5 anos (def1–def5) para respeitar o tempo de formação e evitar *data leakage*.
+
+| Família | Colunas | Descrição |
+| --- | --- | --- |
+| Chaves | `competencia_mov` (date), `sigla_uf` (string), `codigo_cbo_subgrupo` (string) | Grão da observação |
+| Alvo/contexto | `admissoes`, `desligamentos` (bigint) | **ALVO** é `admissoes`; desligamentos como contexto |
+| Autoregressivas | `admissoes_lag_1/3/12`, `admissoes_ma_3/12`, `desligamentos_lag_1`, `desligamentos_ma_3`, `saldo_lag_1`, `salario_mediano_lag_1` | Lags e médias móveis de meses anteriores (sem o mês corrente) |
+| Escala log | `admissoes_log_lag_1`, `admissoes_log_ma_3`, `admissoes_log_ma_12` | log1p das variáveis autoregressivas |
+| Sazonalidade | `mes_sin`, `mes_cos` | Codificação cíclica do mês do ano |
+| Educacionais (via bridge) | `concluintes_def1/def2/def3`, `matriculas_def1`, `ingressantes_def3`, `ingressantes_def5`, `share_ead_def1`, `razao_contratacao_matricula` | Métricas do Censo INEP defasadas (1–5 anos) e razão contratação/matrícula |
+| Auditoria | `versao_transformacao`, `versao_bridge_origem`, `dt_processamento` | Rastreabilidade, incluindo a versão da bridge usada no de-para |
+
+## 3.9 `workspace.gold.ml_features_ols_screening`
+
+**Descrição:** Triagem estatística das features candidatas da Wide Table via regressão OLS *pooled* com efeitos fixos de UF e mês. Grão: uma linha por feature avaliada. Suporta a decisão de quais variáveis entram no modelo final.
+
+| Coluna | Tipo | Descrição |
+| --- | --- | --- |
+| `feature` | string | Feature candidata avaliada |
+| `coeficiente` | double | Coeficiente OLS (pooled, efeitos fixos UF e mês) |
+| `erro_padrao` / `estatistica_t` / `p_valor` | double | Significância do coeficiente |
+| `vif` | double | Variance Inflation Factor (multicolinearidade) |
+| `decisao_screening` / `criterio` | string | Veredito da triagem e critério aplicado |
+| `r2_ajustado` | double | R² ajustado do modelo de screening |
+| `n_observacoes` | bigint | Observações do modelo |
+| `versao_transformacao` / `dt_processamento` | string/timestamp | Versão do snapshot avaliado e data da gravação |
+
+## 3.10 `workspace.gold.ml_backtest_admissoes`
+
+**Descrição:** Métricas de backtest dos modelos preditivos, com validação por cutoffs móveis (jan–dez/2025). Grão: nível × escopo × modelo × cutoff. O nível `GERAL` agrega o holdout (`competencia_mov` nula); `FOLD` traz a métrica de um cutoff. O escopo separa `TODAS_SERIES` (todas as UF×subgrupo) de `AMOSTRA_SARIMAX` (amostra avaliada também com SARIMAX).
+
+| Coluna | Tipo | Descrição |
+| --- | --- | --- |
+| `nivel` | string | `GERAL` (holdout agregado) ou `FOLD` (cutoff específico) |
+| `escopo` | string | `TODAS_SERIES` ou `AMOSTRA_SARIMAX` |
+| `modelo` | string | Modelo avaliado |
+| `competencia_mov` | date | Cutoff do fold (nulo no nível `GERAL`) |
+| `n` | bigint | Observações avaliadas |
+| `mae`, `rmse`, `smape`, `mase` | double | Métricas de erro |
+| `versao_backtest` / `versao_features` | string | Versões do backtest e da Wide Table usada |
+| `dt_processamento` | timestamp | Data/hora da gravação |
+
+## 3.11 `workspace.gold.previsoes_admissoes`
+
+**Descrição:** Previsões de admissões por UF × subgrupo CBO para horizontes futuros (set/2026–ago/2027), geradas a partir do último mês real disponível (ago/2026). Grão: UF × subgrupo CBO × competência prevista × modelo. `previsao_admissoes` é o valor pós-ajuste e `previsao_bruta` o valor original do modelo — a diferença indica calibração aplicada.
+
+| Coluna | Tipo | Descrição |
+| --- | --- | --- |
+| `sigla_uf` / `codigo_cbo_subgrupo` | string | Chaves da série (UF × subgrupo CBO 3 dígitos) |
+| `competencia_prevista` | timestamp | Mês previsto (set/2026–ago/2027) |
+| `horizonte_h` | bigint | Horizonte da previsão em meses à frente |
+| `previsao_admissoes` / `previsao_bruta` | double | Previsão ajustada e bruta |
+| `modelo` / `versao_modelo` / `versao_features` / `versao_previsao` | string | Modelo e versões de rastreabilidade |
+| `ultimo_mes_real` | timestamp | Último mês real usado como base (ago/2026) |
+| `dt_processamento` | timestamp | Data/hora da gravação |
+
+## 3.12 `workspace.gold.desalinhamento_formacao_mercado`
+
+**Descrição:** Análise de desalinhamento entre formação e mercado: compara, por UF × subgrupo CBO, a previsão de admissões dos próximos 12 meses com os concluintes e matrículas do Censo INEP (via bridge CINE × CBO). Materializa a resposta analítica central do projeto — onde a oferta de formação está descolada da demanda prevista do mercado formal.
+
+| Coluna | Tipo | Descrição |
+| --- | --- | --- |
+| `sigla_uf` / `codigo_cbo_subgrupo` | string | Grão da análise |
+| `previsao_admissoes_12m` | double | Admissões previstas nos próximos 12 meses |
+| `admissoes_reais_12m` | bigint | Admissões reais dos últimos 12 meses (referência) |
+| `concluintes_censo` / `matriculas_censo` | double | Concluintes e matrículas do Censo INEP no recorte (via bridge) |
+| `adm_por_concluinte_prev` / `adm_por_concluinte_hist` / `adm_por_matricula_prev` | double | Razões admissões/concluintes (prevista e histórica) e admissões/matrículas |
+| `tendencia_razao` | double | Tendência da razão adm/concluinte |
+| `classificacao` | string | Classificação do desalinhamento (ex.: excesso de formação vs. escassez) |
+| `ano_censo_formacao` | string | Ano do Censo usado como referência da formação |
+| `versao_previsao_origem` / `versao_analise` / `dt_processamento` | string/timestamp | Rastreabilidade da previsão usada e da análise |
+
 ---
 
 ## Chaves de junção recomendadas
@@ -370,5 +446,6 @@ As afirmações abaixo foram confrontadas com os dados reais das tabelas (o text
 | `gold.bridge_cine_cbo_provisoria` ↔ `gold.dim_cine_brasil` | `codigo_cine_area_especifica` ↔ `codigo_cine_area_especifica` |
 | `gold.bridge_cine_cbo_provisoria` ↔ `gold.fato_caged_semestral` / `dim_cbo_ocupacao` | `codigo_cbo_subgrupo` (3 dígitos) ↔ dígitos 2 a 4 do código CBO 2002 — derivável com `LPAD(CAST(FLOOR(cbo2002_ocupacao/1000) % 1000 AS STRING), 3, '0')` |
 | `gold.bridge_cine_cbo_provisoria_cobertura` ↔ `bridge_cine_cbo_provisoria` | `codigo_cine_area_especifica` + `versao_mapeamento` |
+| `gold.ml_features_mensal_uf_cbo` / `previsoes_admissoes` / `desalinhamento_formacao_mercado` ↔ `bridge_cine_cbo_provisoria` | `codigo_cbo_subgrupo` (grão já no nível de 3 dígitos da bridge) |
 
 > **Observação:** `dim_cbo_ocupacao.codigo_cbo` é STRING de 6 dígitos; `fato_caged_semestral.cbo2002_ocupacao` e `silver` usam INT (perdem o zero à esquerda). Ao cruzar, use `CAST/LPAD` para alinhar os formatos.
