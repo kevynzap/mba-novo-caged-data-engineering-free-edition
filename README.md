@@ -27,6 +27,32 @@ Desenvolver uma solução de Engenharia de Dados e Machine Learning para analisa
 - Criar um dashboard para acompanhar previsões, tendências e indicadores educacionais.
 - Demonstrar arquitetura Lambda, CI/CD, qualidade e versionamento, conforme os requisitos acadêmicos e as possibilidades dos ambientes utilizados.
 
+## Escopo do estudo e limitação de abrangência
+
+A presente iniciativa foi concebida para responder a uma questão de negócio mais ampla: **integrar dados históricos de emprego e educação profissional para apoiar a previsão de admissões por ocupação e região e subsidiar decisões de planejamento da oferta de cursos no Brasil**. Nesse contexto, o objetivo principal do projeto não é constituir um mapeamento universal de todas as profissões existentes no mercado de trabalho brasileiro, nem um catálogo completo das ocupações registradas na CBO, mas **desenvolver uma solução de Engenharia de Dados e Machine Learning capaz de analisar tendências de emprego formal e relacioná-las à oferta de formação profissional**.
+
+Dentro deste contexto, o **estudo de correspondência entre cursos da FATEC e ocupações do CAGED (DE/PARA) representa uma etapa de apoio metodológico e não o objetivo central do projeto**. Ele foi conduzido como um recorte analítico para avaliar a aderência entre formação profissional e demanda de ocupações em um conjunto de dados delimitado. Assim, o mapeamento realizado considera, de forma intencional, apenas:
+
+- Os cursos da FATEC disponíveis no ambiente de trabalho;
+- As ocupações CBO selecionadas como referência dentro do recorte do CAGED 2025;
+- O DE/PARA gerado por similaridade semântica entre curso, eixo tecnológico e descrição da ocupação.
+
+A limitação desse escopo é uma **decisão metodológica e não uma falha do processo**. O projeto não busca cobrir o universo completo de ocupações da CBO, nem afirmar que todos os cursos e profissões existentes no mercado brasileiro foram contemplados. O trabalho foi desenhado como uma solução estratégica para um problema específico, com foco em dados públicos, previsão de admissões e análise de alinhamento entre formação e mercado, e não como um inventário definitivo de todas as relações entre educação e ocupação.
+
+### Por que essa restrição é importante
+
+A relação entre cursos e ocupações não é direta nem unívoca. Muitas profissões não possuem correspondência clara com um curso específico, e muitas ocupações podem ser relacionadas a múltiplos perfis formativos. Por isso, o projeto adota uma **abordagem documental e controlada de correspondência**, registrando relações com maior ou menor grau de similaridade e marcando eventuais ambiguidades, em vez de presumir equivalência direta entre curso e ocupação.
+
+Essa limitação de escopo também segue as práticas de **Lean Six Sigma**, especialmente no contexto do ciclo DMAIC (Define, Measure, Analyze, Improve, Control). Na fase Define, o problema, os objetivos e os limites da análise são explicitados para reduzir ambiguidade, evitar supergeneralização e preservar a validade do estudo. Em termos práticos:
+
+- **Define**: o problema de negócio e o escopo da solução são delimitados;
+- **Measure**: os dados são avaliados no contexto real da base disponível;
+- **Analyze**: a análise se concentra no conjunto de relações que podem ser sustentadas pela metodologia adotada;
+- **Improve**: ações e decisões são orientadas por indicadores e por uma visão controlada do problema;
+- **Control**: o estudo impede conclusões extrapoladas além do contexto e reduz ruído analítico.
+
+A restrição do estudo aos cursos da FATEC e ao subconjunto de ocupações do DE/PARA é uma **escolha consciente de governança do projeto**. Ela não desqualifica o objetivo maior do trabalho, mas organiza a execução em um escopo viável e metodologicamente defensável. O estudo continua sendo relevante ao problema original, pois oferece um mecanismo de apoio para análise de alinhamento entre formação e mercado, mantendo transparência sobre os limites do recorte adotado.
+
 ## Desenho inicial da arquitetura
 
 O projeto adota uma arquitetura **Lakehouse baseada no padrão Medallion**, estruturando os dados em Landing, Bronze, Silver e Gold.
@@ -272,6 +298,21 @@ Um desafio metodológico é relacionar classificações de cursos ou áreas de f
 Essa correspondência não deve ser presumida como direta: uma formação pode estar associada a várias ocupações, e uma ocupação pode reunir profissionais de diferentes formações.
 
 A correspondência é construída pelos notebooks `032_mapeamento_cine_cbo.ipynb` e `033_construcao_bridge_cine_cbo.ipynb`, que implementam a bridge CINE × CBO no nível de rótulo, evitando multiplicações indevidas nas medidas agregadas.
+
+### DE/PARA FATEC × CBO (2025)
+
+O [notebook DE/PARA](notebooks/02_transformacao/02_de_para_fatec_ocupacoes_cbo.ipynb)
+cruza cursos da FATEC com ocupações CBO candidatas usando similaridade semântica.
+O fluxo requer a tabela de origem `workspace.bronze.cursos_fatec` e grava
+`workspace.silver.cursos_fatec_ocupacoes_cbo_2025`. A
+[especificação do DE/PARA](docs/de-para-fatec-caged-2025-specs.md)
+documenta o resultado de referência, os critérios e as limitações.
+
+Os scripts [EDA.py](notebooks/03_analytics/EDA.py) e
+[04_eda_rigorosa_bussab_moretin.py](notebooks/03_analytics/04_eda_rigorosa_bussab_moretin.py)
+registram duas versões da análise exploratória CAGED/FATEC. Eles dependem de
+`workspace.silver.novo_caged_movimentacoes_semestral`, uma tabela auxiliar cuja
+criação não está versionada no pipeline atual.
 
 ## Modelagem dimensional e Wide Table
 
