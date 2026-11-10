@@ -1,6 +1,8 @@
-
 bundle:
   name: mba_novo_caged
+
+include:
+  - resources/*.yml
 
 targets:
   dev:
