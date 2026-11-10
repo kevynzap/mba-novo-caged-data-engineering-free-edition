@@ -1,0 +1,8 @@
+
+bundle:
+  name: mba_novo_caged
+
+targets:
+  dev:
+    mode: development
+    default: true
