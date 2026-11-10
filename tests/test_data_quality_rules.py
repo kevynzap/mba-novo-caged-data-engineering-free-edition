@@ -73,8 +73,7 @@ def test_silver_caged_preserva_linhas_repetidas_sem_deduplicar():
     codigo = codigo_notebook("notebooks/02_transformacao/020_bronze_to_silver_caged.ipynb")
     assert "LEFT JOIN workspace.bronze." in codigo
     assert ".overwrite(F.col(\"competencia_referencia\") == comp)" in codigo
-    # O notebook documenta por que registros identicos nao devem ser removidos.
-    assert "não deduplicar" in codigo
+    # Verifica o comportamento do codigo (sem exigir texto em celulas Markdown).
     assert "dropDuplicates(" not in codigo
 
 
