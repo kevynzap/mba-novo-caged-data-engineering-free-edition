@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DemandA — Dashboard CAGED: Demanda Profissional</title>
+<style>
+  :root{--azul:#001236;--azul2:#009999;--verm:#D86DCD;--verde:#009999;--tinta:#1c2733;--cinza:#5b6b7c;--fundo:#f4f7fb;--card:#ffffff;--borda:#dce4ee;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--fundo);color:var(--tinta);line-height:1.55;}
+  .container{max-width:1100px;margin:0 auto;padding:0 18px 60px;}
+  header{background:linear-gradient(120deg,#001236 0%,#004d7a 60%,#009999 100%);color:#fff;padding:44px 18px 38px;text-align:center;}
+  header h1{font-size:26px;font-weight:700;letter-spacing:.4px;}
+  header p.sub{margin-top:8px;font-size:14.5px;opacity:.92;}
+  header p.meta{margin-top:14px;font-size:12.5px;opacity:.75;}
+  h2.secao{margin:44px 0 6px;font-size:21px;color:#001236;display:flex;align-items:center;gap:10px;}
+  h2.secao .num{background:#001236;color:#fff;border-radius:8px;font-size:15px;padding:2px 11px;}
+  p.abre{color:var(--cinza);font-size:14px;margin-bottom:16px;max-width:900px;}
+  .card{background:var(--card);border:1px solid var(--borda);border-radius:14px;padding:20px 22px;margin-bottom:18px;box-shadow:0 2px 6px rgba(23,57,94,.06);}
+  .card h3{font-size:16px;color:#001236;margin-bottom:8px;}
+  .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:-26px;}
+  .kpi{background:var(--card);border:1px solid var(--borda);border-radius:14px;padding:16px 18px;box-shadow:0 3px 10px rgba(23,57,94,.10);}
+  .kpi .tt{font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#8a97a5;margin-bottom:2px;}
+  .kpi .v{font-size:25px;font-weight:700;color:var(--azul);}
+  .kpi .v.vv{color:#D86DCD;} .kpi .v.vl{color:#009999;}
+  .kpi .t{font-size:12.5px;color:var(--cinza);margin-top:3px;}
+  .tabela{width:100%;border-collapse:collapse;font-size:13.5px;}
+  .tabela th{background:#001236;color:#fff;padding:8px 10px;text-align:left;font-weight:600;}
+  .tabela td{padding:7px 10px;border-bottom:1px solid var(--borda);}
+  .tabela tr:nth-child(even) td{background:#f6f9fc;}
+  .tabela .num{text-align:right;font-variant-numeric:tabular-nums;}
+  .destaque{background:#faf0f9;border-left:4px solid #D86DCD;border-radius:0 10px 10px 0;padding:12px 16px;margin:14px 0;font-size:13.5px;}
+  .destaque b{color:#9c3d92;}
+  .importa{background:#e6f5f5;border-left:4px solid #009999;border-radius:0 10px 10px 0;padding:12px 16px;margin:14px 0;font-size:13.5px;}
+  .importa b{color:#006969;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  .grafico{background:var(--card);border:1px solid var(--borda);border-radius:14px;padding:16px 18px;margin:14px 0;}
+  .grafico h4{font-size:14.5px;color:#001236;margin-bottom:4px;}
+  .grafico p.exp{font-size:12.5px;color:var(--cinza);margin-bottom:8px;}
+  .legenda{margin-top:8px;font-size:13px;color:var(--cinza);display:flex;flex-wrap:wrap;gap:14px;}
+  .chip{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
+  svg text{font-family:'Segoe UI',sans-serif;}
+  .grid{stroke:#e6edf5;stroke-width:1;}
+  .tick{fill:#5b6b7c;font-size:13px;}
+  .feat{border:1px solid var(--borda);border-radius:12px;padding:14px 16px;margin-bottom:12px;background:var(--card);}
+  .feat .fn{font-weight:700;color:#001236;font-size:14px;font-family:Consolas,monospace;}
+  .feat .fp{font-size:13px;color:var(--cinza);margin-top:3px;}
+  .feat .pq{font-size:13px;margin-top:7px;}
+  .feat .ref{font-size:11.5px;color:#8a97a5;margin-top:6px;font-style:italic;}
+  .passo{display:flex;gap:14px;margin-bottom:14px;}
+  .passo .n{flex:0 0 34px;height:34px;background:#001236;color:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;}
+  .passo .tx h3{font-size:15px;color:#001236;}
+  .passo .tx p{font-size:13px;color:var(--cinza);margin-top:3px;}
+  footer{margin-top:46px;padding-top:18px;border-top:1px solid var(--borda);font-size:12px;color:var(--cinza);}
+  @media(max-width:760px){.kpis,.grid2{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<header>
+  <h1>DemandA · Dashboard CAGED</h1>
+  <p class="sub">Demanda Profissional — Novo CAGED, movimentações do mercado formal · jan/2021–ago/2026 (68 meses)</p>
+  <p class="meta">MBA Data Engineering &amp; Analytics · Fernanda Carnevalle de Melo · 02/11/2026 · Fonte: silver <code>novo_caged_movimentacoes</code> + agregado semestral · EDA segundo Bussab &amp; Morettin (2010) · Contraparte: <code>dashboard_inep.html</code> (formação)</p>
+</header>
+<div class="container">
+
+<div class="kpis">
+  <div class="kpi"><div class="tt">Admissões · 2024</div><div class="v">25,3 mi</div><div class="t">admissões no mercado formal em 2024 — recorde da série de 68 meses</div></div>
+  <div class="kpi"><div class="tt">Tendência · 5 anos</div><div class="v vl">+46%</div><div class="t">crescimento da demanda por contratações de 2021 a 2026 (série mensal)</div></div>
+  <div class="kpi"><div class="tt">Salário de contratação</div><div class="v vl">+44%</div><div class="t">mediana de admissão: R$ 1.387 → R$ 2.000 — as vagas ganham remuneração, não só volume</div></div>
+  <div class="kpi"><div class="tt">Lei da rotatividade</div><div class="v">0,98</div><div class="t">correlação admissões × desligamentos: quem contrata mais, desliga mais — o giro domina o mercado</div></div>
+  <div class="kpi"><div class="tt">Alerta 2025S2</div><div class="v vv">42.982</div><div class="t">saldo do semestre (admissões − desligamentos) quase nulo — ponto de mudança a investigar</div></div>
+  <div class="kpi"><div class="tt">Volatilidade (CV)</div><div class="v">11,3%</div><div class="t">coeficiente de variação sem o semestre parcial: volatilidade moderada, não alta</div></div>
+</div>
+
+<h2 class="secao"><span class="num">1</span> A base — um contador mensal de portaria</h2>
+<p class="abre">O CAGED registra <b>cada contratação e cada demissão</b> do mercado formal, mês a mês. É a lente mais fina do projeto: 68 dos 72 meses esperados estão presentes — e o único buraco é conhecido.</p>
+<div class="card">
+  <table class="tabela">
+    <tr><th>Aspecto</th><th>Valor</th><th>Leitura de negócio</th></tr>
+    <tr><td><b>Cobertura</b></td><td>68 de 72 meses (~94%)</td><td>histórico contínuo de jan/2021 a ago/2026 — suficiente para tendência e sazonalidade</td></tr>
+    <tr><td><b>Semestres</b></td><td>12 (11 completos + 1 parcial)</td><td>S1+S2 fecha o ano com diferença zero (verificado) — agregação de conferência</td></tr>
+    <tr><td><b>Admissões</b></td><td>tipos 10, 20, 25, 35, 70, 97</td><td>a contagem usa os códigos oficiais de admissão do Novo CAGED</td></tr>
+    <tr><td><b>Desligamentos</b></td><td>tipos 31–98 (11 códigos)</td><td>contados na mesma varredura das admissões</td></tr>
+    <tr><td><b>Salário</b></td><td>mediana por admissão</td><td>mediana (não média) por ser robusta a extremos</td></tr>
+  </table>
+  <div class="importa"><b>Isso é importante porque…</b> o único mês faltante é previsível: <b>2026S2 é parcial</b> (jul–ago, 2 de 6 meses). Misturá-lo em médias ou modelos sem tratamento distorce a leitura de tendência — ele é justamente o ponto mais baixo da série. Para o modelo: <b>normalizar por mês ou excluir das comparações semestrais</b>.</div>
+  <div class="destaque"><b>A lição estatística da cobertura:</b> com os 12 semestres, o Shapiro-Wilk rejeita normalidade (p = 0,022) e o CV acusa “alta volatilidade” (21,2%). <b>Sem o parcial, a rejeição desaparece inteiramente</b> (p = 0,899) e o CV cai pela metade (11,3%). A “não-normalidade” e a “alta volatilidade” eram artefatos de cobertura, não propriedades do mercado de trabalho.</div>
+</div>
+
+<h2 class="secao"><span class="num">2</span> A série semestral — admissões crescendo, criação líquida caindo</h2>
+<p class="abre">Doze semestres em uma linha: o mercado <b>não parou de contratar</b> (admissões +46%), mas o <b>saldo</b> (admissões − desligamentos) encolhe — quase toda contratação hoje repõe quem saiu.</p>
+<div class="grafico">
+  <h4>Admissões, desligamentos e saldo por semestre (milhões)</h4>
+  <p class="exp">Navy = admissões; rosa = desligamentos; teal = saldo líquido. 26S2* é parcial (jul–ago). Rótulos = valor em milhões em cada ponto.</p>
+  <div id="chart-sem"></div>
+</div>
+<div class="importa"><b>Isso é importante porque…</b> as duas curvas de cima andam grudadas (correlação 0,98 — a lei da rotatividade): o volume de contratação é, na prática, volume de <b>reposição</b>. O saldo cai de 1,53 mi (2021S1) para 42.982 em 2025S2 — e é esse saldo, não o volume, que mede <b>criação de vaga nova</b>. Planejamento de capacidade olha o saldo; previsão de demanda olha o giro.</div>
+<div class="card">
+  <h3>Estatísticas da série — com e sem o semestre parcial</h3>
+  <table class="tabela">
+    <tr><th>Estatística</th><th class="num">12 semestres</th><th class="num">11 completos</th><th>Por que a diferença</th></tr>
+    <tr><td>Mínimo</td><td class="num">4,56 mi</td><td class="num">9,46 mi</td><td>o mínimo era o parcial</td></tr>
+    <tr><td>Mediana</td><td class="num">11,62 mi</td><td class="num">11,77 mi</td><td>estável — o típico não muda</td></tr>
+    <tr><td>Desvio-padrão</td><td class="num">±2,39 mi</td><td class="num">±1,34 mi</td><td>a dispersão era inflada pelo parcial</td></tr>
+    <tr><td><b>Coeficiente de variação</b></td><td class="num">21,23%</td><td class="num">11,26%</td><td>volatilidade alta era artefato</td></tr>
+    <tr><td>Assimetria</td><td class="num">−1,62</td><td class="num">−0,11</td><td>cauda esquerda desaparece</td></tr>
+    <tr><td>Shapiro-Wilk (p)</td><td class="num">0,022</td><td class="num">0,899</td><td>rejeição de normalidade some</td></tr>
+  </table>
+  <p style="font-size:12.5px;color:#5b6b7c;margin-top:8px">A coluna dos 12 permanece porque 2026S2 é dado real (jul–ago efetivamente ocorridos) — mas <b>toda comparação semestral usa a coluna da direita</b>.</p>
+</div>
+
+<h2 class="secao"><span class="num">3</span> Sazonalidade e salário — o calendário do mercado e o preço da vaga</h2>
+<p class="abre">Duas regularidades que todo planejador de contratação precisa saber de cor: <b>quando</b> o mercado contrata e <b>quanto</b> paga a vaga típica.</p>
+<div class="grafico">
+  <h4>O peso médio de cada mês no ano (anos completos 2021–2025)</h4>
+  <p class="exp">Peso do mês no total do ano, média dos 5 anos completos. Linha tracejada = “mês neutro” (1/12 = 8,33%). Fevereiro e agosto contratam acima da conta; dezembro despenca.</p>
+  <div id="chart-saz"></div>
+</div>
+<div class="grid2">
+  <div class="card">
+    <h3>Salário mediano de admissão: +44% sem sustos</h3>
+    <p style="font-size:13.5px">Progressão suave de <b>R$ 1.387 (2021S1)</b> a <b>R$ 2.000</b> na série — entre os 11 semestres completos, o máximo é R$ 1.961 (progressão de ~41%). É a variável com comportamento mais próximo da normal (Shapiro-Wilk p = 0,73).</p>
+    <div class="importa" style="margin-bottom:0"><b>Isso é importante porque…</b> o contraste define os papéis no modelo: <b>volume é volátil; remuneração é estável</b>. O salário não é distorcido nem pelo semestre parcial — a mediana por contratação (milhões de registros por mês) não sofre efeito de cobertura. Entra no modelo como exógena validada (correlação 0,68 com admissões do mês seguinte).</div>
+  </div>
+  <div class="card">
+    <h3>Idade mediana: 30–31 anos, estável</h3>
+    <p style="font-size:13.5px">A idade mediana de admissão variou <b>1 ano</b> em todo o período (30 a 31). O teste de normalidade “rejeita” — mas é <b>artefato da discretização</b> (a variável só assume dois valores), não anomalia de mercado.</p>
+    <div class="importa" style="margin-bottom:0"><b>Isso é importante porque…</b> é a lição de método que atravessa todo o projeto: <b>o teste estatístico aponta, o contexto decide</b>. Antes de tratar algo como outlier, pergunte se é erro de dado, evento real ou efeito de cobertura.</div>
+  </div>
+</div>
+
+<h2 class="secao"><span class="num">4</span> Outliers — dois métodos, uma conclusão</h2>
+<p class="abre">IQR (Tukey) e MAD aplicados às três variáveis — quando dois métodos robustos convergem, a classificação é confiável.</p>
+<div class="card">
+  <table class="tabela">
+    <tr><th>Variável</th><th class="num">Outliers IQR</th><th class="num">Outliers MAD</th><th>Diagnóstico</th></tr>
+    <tr><td>Admissões</td><td class="num">1 (8,3%)</td><td class="num">1 (8,3%)</td><td>2026S2 — efeito de cobertura, não erro</td></tr>
+    <tr><td>Salário</td><td class="num">0</td><td class="num">0</td><td>nenhuma anomalia</td></tr>
+    <tr><td>Idade</td><td class="num">3 (25%)</td><td class="num">0</td><td>falsos positivos da discretização (IQR degenerado de 0,25)</td></tr>
+  </table>
+  <div class="importa"><b>Isso é importante porque…</b> a contraprova é a prova: recalculados sem o parcial, <b>IQR e MAD retornam zero outliers</b>. A base silver <b>não tem erro de dado</b> — o único extremo é o semestre parcial, que entra na história como caso especial de cobertura, não como anomalia a remover.</div>
+</div>
+
+<h2 class="secao"><span class="num">5</span> A lei da rotatividade — correlações bivariadas</h2>
+<p class="abre">Pearson mede relação linear (sensível a extremos); Spearman mede relação monotônica qualquer. Divergência entre as duas é sintoma de não-linearidade ou outlier.</p>
+<div class="card">
+  <table class="tabela">
+    <tr><th>Par</th><th class="num">Pearson</th><th class="num">Spearman</th><th>Leitura de negócio</th></tr>
+    <tr><td>Admissões × Desligamentos</td><td class="num"><b>0,98</b></td><td class="num">0,96</td><td>lei da rotatividade: contratam e desligam juntos</td></tr>
+    <tr><td>Admissões × Salário</td><td class="num">0,02</td><td class="num">0,47</td><td>relação temporal (ambas sobem), não direta</td></tr>
+    <tr><td>Admissões × Saldo</td><td class="num">0,22</td><td class="num">—</td><td>saldo é resíduo quase colinear — indicador de ciclo, não feature de volume</td></tr>
+  </table>
+  <div class="importa"><b>Isso é importante porque…</b> as conclusões práticas saem direto da tabela: (1) <b>não usar admissões e desligamentos juntas</b> em modelo linear — multicolinearidade; (2) o desligamento defasado é o melhor <i>proxy</i> antecedente da admissão seguinte (0,69 em t+1); (3) o saldo serve como <b>termômetro de ciclo</b> isolado (ex.: alerta 2025S2).</div>
+</div>
+
+<h2 class="secao"><span class="num">6</span> Features validadas para o modelo — o pódio de t+1</h2>
+<p class="abre">A correlação com o valor corrente (t) mostra associação; a correlação com <b>t+1</b> é o teste de utilidade real: só features calculáveis <i>hoje</i> que se relacionam com o <i>próximo</i> mês antecipam de verdade. Todas calculadas sem vazamento de futuro.</p>
+<div class="grafico">
+  <h4>Correlação de cada feature com as admissões do mês seguinte (t+1)</h4>
+  <p class="exp">Navy = correlação positiva; rosa = o freio cíclico (saldo defasado, correlação negativa). Rótulos = valor de Pearson r em cada barra.</p>
+  <div id="chart-feat"></div>
+</div>
+<div class="importa"><b>Isso é importante porque…</b> o pódio de t+1 é revelador: <b>tendência (0,70), desligamentos do mês passado (0,69) e salário do mês passado (0,68)</b> — e o lag-1 da própria série (0,40) fica <b>atrás</b> das exógenas. A demanda não é pura inércia: empresas que desligam já reposicionam vagas, e remuneração em alta antecipa volume. O saldo defasado é negativo (−0,37): mês de contratação líquida forte antecede refluxo — sinal de <b>ciclo</b>. Nenhuma feature passa de 0,71: o modelo terá erro não-nulo, e isso é esperado — não é falha.</div>
+<div class="destaque"><b>Regra de ouro:</b> toda feature entra <b>defasada</b> — o modelo só vê informação que já existia no momento da previsão. Um modelo com vazamento parece excelente no treino e quebra em produção.</div>
+
+<h2 class="secao"><span class="num">7</span> Próximos passos — o que destrava cada capacidade</h2>
+<div class="card">
+  <div class="passo"><div class="n">1</div><div class="tx"><h3>Modelar a sazonalidade explicitamente</h3><p><b>O que é:</b> SARIMA/Prophet com dummies sazonais ou transformação log. <b>Por quê:</b> a série é não-estacionária (ADF p = 0,22) e dominada por sazonalidade + choque de 2021 — sem tratamento, o modelo “aprende” que sempre sobe.</p></div></div>
+  <div class="passo"><div class="n">2</div><div class="tx"><h3>Estratificar por UF e Seção CNAE</h3><p><b>O que é:</b> agregar a série por UF × semestre e Seção × semestre (a EDA atual é Brasil total). <b>Por quê:</b> a demanda nacional esconde regionalismos — e o modelo final do escopo prevê no grão UF × grupo ocupacional (CBO).</p></div></div>
+  <div class="passo"><div class="n">3</div><div class="tx"><h3>Investigar o ponto de mudança de 2025S2</h3><p><b>O que é:</b> saldo quase nulo (+42 mil) — investigar se é recessão real ou anomalia de coleta; testar detecção de mudança de regime. <b>Por quê:</b> um modelo treinado antes de uma quebra estrutural erra sistematicamente depois dela.</p></div></div>
+  <div class="passo"><div class="n">4</div><div class="tx"><h3>Levar as features mensais ao pipeline de treino (MLflow)</h3><p><b>O que é:</b> materializar os lags, médias móveis e exógenas defasadas da Seção 6 como tabela de treino versionada. <b>Por quê:</b> já validadas estatisticamente (todas as top-10 significativas, p &lt; 0,005), falta convertê-las em experimento rastreável — baseline SARIMA × challengers, MAE/MAPE com janela expansiva.</p></div></div>
+  <div class="passo"><div class="n">5</div><div class="tx"><h3>Completar 2026 quando set–dez forem ingeridos</h3><p><b>O que é:</b> fechar os 4 meses restantes do ano e revalidar. <b>Por quê:</b> encerra o artefato de cobertura de uma vez e dá ao modelo um sexto ano de calendário sazonal.</p></div></div>
+</div>
+
+<footer>
+  <b>Fontes e procedência:</b> silver <code>novo_caged_movimentacoes</code> (68 meses) + <code>novo_caged_movimentacoes_semestral</code> (12 semestres) · índice sazonal calculado em 02/11/2026 sobre anos completos 2021–2025 · estatísticas e correlações da EDA re-executada em 30/10/2026.<br>
+  <b>Metodologia:</b> EDA segundo Bussab &amp; Morettin (2010) — detalhes em <code>EDA_caged.md</code> · contraparte de formação: <code>dashboard_inep.html</code> · visão integrada: <code>dashboard_unificado_caged_inep.html</code> · DemandA — Fernanda Carnevalle de Melo · 2026
+</footer>
+</div>
+<script>
+function el(id){return document.getElementById(id)}
+function lineChart(id,cats,series,yMin,yMax,yTick,skipFirst){
+  var W=920,H=430,L=64,R=895,T=26,B=378,n=cats.length;
+  var X=function(i){return L+i*(R-L)/(n-1)};var Y=function(v){return T+(B-T)*(1-(v-yMin)/(yMax-yMin))};
+  var s='<svg viewBox="0 0 920 '+H+'">';
+  for(var k=0;k<=4;k++){var v=yMin+(yMax-yMin)*k/4;var gy=Y(v);s+='<line class="grid" x1="'+L+'" x2="'+R+'" y1="'+gy+'" y2="'+gy+'"/><text class="tick" x="'+(L-7)+'" y="'+(gy+4)+'" text-anchor="end">'+yTick(v)+'</text>';}
+  cats.forEach(function(c,i){s+='<text class="tick" x="'+X(i)+'" y="'+(B+18)+'" text-anchor="middle">'+c+'</text>'});
+  series.forEach(function(sr,si){
+    var pts=sr.v.map(function(v,i){return X(i).toFixed(1)+','+Y(v).toFixed(1)}).join(' ');
+    s+='<polyline fill="none" stroke="'+sr.c+'" stroke-width="3" points="'+pts+'"/>';
+    sr.v.forEach(function(v,i){s+='<circle cx="'+X(i).toFixed(1)+'" cy="'+Y(v).toFixed(1)+'" r="4.5" fill="'+sr.c+'"><title>'+sr.n+' — '+cats[i]+': '+v.toFixed(2)+'</title></circle>'});
+    sr.v.forEach(function(v,i){if(skipFirst&&i===0){return;}
+      var dy=(si%2===0)?-9:15;
+      s+='<text x="'+X(i).toFixed(1)+'" y="'+(Y(v)+dy).toFixed(1)+'" text-anchor="middle" style="font-size:11px;font-weight:700" fill="'+sr.c+'">'+v.toFixed(1)+'</text>';});
+  });
+  s+='<line x1="'+L+'" x2="'+L+'" y1="'+T+'" y2="'+B+'" stroke="#c8d2dd"/><line x1="'+L+'" x2="'+R+'" y1="'+B+'" y2="'+B+'" stroke="#c8d2dd"/>';
+  s+='</svg>';
+  var lg=series.map(function(sr){return '<span class="chip" style="background:'+sr.c+'"></span>'+sr.n}).join(' ');
+  el(id).innerHTML=s+'<div class="legenda">'+lg+'</div>';
+}
+function barChart(id,cats,vals,yMin,yMax,fmt,color,yTick,refLine){
+  var W=920,H=410,L=64,R=895,T=30,B=340,slot=(R-L)/cats.length,bw=Math.min(120,slot*0.55);
+  var Y=function(v){return T+(B-T)*(1-(v-yMin)/(yMax-yMin))};
+  var s='<svg viewBox="0 0 920 '+H+'">';
+  for(var k=0;k<=4;k++){var v=yMin+(yMax-yMin)*k/4;var gy=Y(v);s+='<line class="grid" x1="'+L+'" x2="'+R+'" y1="'+gy+'" y2="'+gy+'"/><text class="tick" x="'+(L-7)+'" y="'+(gy+4)+'" text-anchor="end">'+yTick(v)+'</text>';}
+  if(refLine){var yl=Y(refLine.v);s+='<line x1="'+L+'" x2="'+R+'" y1="'+yl+'" y2="'+yl+'" stroke="#8f4f88" stroke-dasharray="7 5"/><text x="'+(L+4)+'" y="'+(yl-7)+'" text-anchor="start" style="font-size:12.5px;font-weight:700" fill="#8f4f88">'+refLine.l+'</text>';}
+  cats.forEach(function(c,i){var v=vals[i];var x=L+i*slot+(slot-bw)/2;var yv=Y(v);
+    s+='<rect x="'+x.toFixed(1)+'" y="'+yv.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+Math.max(0.5,B-yv).toFixed(1)+'" rx="3" fill="'+(Array.isArray(color)?color[i]:color)+'"><title>'+c+': '+fmt(v)+'</title></rect>';
+    s+='<text class="tick" x="'+(x+bw/2).toFixed(1)+'" y="'+(yv-8).toFixed(1)+'" text-anchor="middle" style="font-size:15px;font-weight:700" fill="#001236">'+fmt(v)+'</text>';
+    s+='<text class="tick" x="'+(x+bw/2).toFixed(1)+'" y="'+(B+18)+'" text-anchor="middle" style="font-size:13px">'+c+'</text>';});
+  s+='</svg>';el(id).innerHTML=s;
+}
+lineChart('chart-sem',['21S1','21S2','22S1','22S2','23S1','23S2','24S1','24S2','25S1','25S2','26S1','26S2*'],[
+  {n:'Admissões',v:[9.46,10.25,11.46,10.79,11.77,11.21,13.03,12.31,13.76,12.56,13.81,4.56],c:'#001236'},
+  {n:'Desligamentos',v:[7.92,8.93,10.09,10.15,10.76,10.74,11.72,11.94,12.55,12.52,12.91,4.33],c:'#D86DCD'},
+  {n:'Saldo líquido',v:[1.53,1.32,1.37,0.64,1.01,0.47,1.30,0.37,1.21,0.04,0.90,0.22],c:'#009999'}
+],-0.5,16,function(v){return v.toFixed(0)+' mi'},false);
+barChart('chart-saz',['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'],[8.16,8.98,8.78,8.23,8.47,8.27,8.46,8.98,8.67,8.57,8.06,6.37],0,10,function(v){return v.toFixed(2).replace('.',',')+'%'},'#001236',function(v){return v.toFixed(0)+'%'},{v:8.33,l:'mês neutro (1/12) = 8,33%'});
+barChart('chart-feat',['t (tendência)','desl_lag_1m','salario_lag_1m','adm_media_12m','adm_lag_12m','adm_std_3m','adm_lag_1m','saldo_lag_1m'],[0.70,0.69,0.68,0.51,0.50,0.44,0.40,-0.37],-0.5,0.9,function(v){return v.toFixed(2).replace('.',',')},['#001236','#001236','#001236','#001236','#001236','#001236','#001236','#D86DCD'],function(v){return v.toFixed(1)});
+</script>
+</body>
+</html>

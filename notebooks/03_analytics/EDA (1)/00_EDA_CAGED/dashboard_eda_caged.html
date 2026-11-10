@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Dashboard EDA — Demanda Profissional CAGED</title>
+<style>
+ :root{--azul:#0e2a47;--azul2:#5b7fa6;--laranja:#e07b39;--verm:#d94f4f;--tinta:#1c2836;--cinza:#5b6b7c;--fundo:#f7f9fc;--card:#ffffff}
+ *{box-sizing:border-box}
+ body{margin:0;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--fundo);color:var(--tinta)}
+ header{background:linear-gradient(135deg,#0b1f3a,#16386a);color:#fff;padding:30px 36px 34px}
+ header h1{margin:0 0 4px;font-size:25px} header p{margin:2px 0;opacity:.88;font-size:13px}
+ .wrap{max-width:1020px;margin:0 auto;padding:0 24px 46px}
+ .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:14px;margin-top:-30px;position:relative}
+ .kpi{background:var(--card);border-radius:10px;padding:16px 18px;box-shadow:0 3px 10px rgba(16,32,64,.12)}
+ .kpi .v{font-size:26px;font-weight:700;color:var(--azul)} .kpi .t{font-size:12.5px;color:var(--cinza);margin-top:3px;line-height:1.35}
+ section{margin-top:34px} h2{font-size:19px;color:#16324f;border-left:5px solid var(--azul);padding-left:10px;margin:0}
+ .sub{font-size:13px;color:var(--cinza);margin:6px 0 0 15px}
+ .card{background:var(--card);border-radius:10px;padding:18px 20px;box-shadow:0 2px 8px rgba(16,32,64,.08);margin-top:14px}
+ .nota{font-size:12.8px;color:var(--cinza);margin-top:10px;line-height:1.45}
+ .legenda{font-size:12.5px;color:var(--cinza);margin-top:6px}
+ .chip{display:inline-block;width:11px;height:11px;border-radius:2px;margin:0 5px 0 14px;vertical-align:middle}
+ .chip:first-child{margin-left:0}
+ .evgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-top:14px}
+ .ev{background:var(--card);border-radius:10px;padding:16px 17px;box-shadow:0 2px 8px rgba(16,32,64,.08);border-top:4px solid var(--azul)}
+ .ev .tag{display:inline-block;font-size:10.5px;font-weight:600;letter-spacing:.03em;background:#e4ebf3;color:var(--azul);border-radius:12px;padding:3px 11px;margin-bottom:9px}
+ .ev p{margin:0;font-size:13.3px;line-height:1.5}
+ .ev b{color:#16324f}
+ .dec{margin-top:11px;padding:9px 11px;background:#f0f7ee;border-left:4px solid #4e9a51;border-radius:4px;font-size:12.8px;line-height:1.45}
+ .dec b{color:#2e6b31}
+ .alert{background:#fdf3f2;border-left:4px solid var(--verm);padding:11px 14px;border-radius:4px;font-size:13.3px;margin-top:10px;line-height:1.5}
+ svg{width:100%;height:auto;display:block}
+ .grid{stroke:#e3e9f0;stroke-width:1} .tick{font-size:11px;fill:var(--cinza)} .tickline{stroke:#c8d2dd}
+ .serieA{fill:none;stroke:var(--azul);stroke-width:2.4} .serieB{fill:none;stroke:var(--laranja);stroke-width:2.4}
+ .ptA{fill:var(--azul)} .ptB{fill:var(--laranja)}
+ .barA{fill:var(--azul)} .barP{fill:var(--verm)}
+ ol.road{padding-left:22px;margin-top:8px} ol.road li{margin:10px 0;font-size:14px;line-height:1.5} ol.road li b{color:#16324f}
+ .foot{font-size:12px;color:var(--cinza);border-top:1px solid #dce4ec;margin-top:36px;padding-top:14px;line-height:1.6}
+ @media print{header{padding:16px 22px} .kpi .v{font-size:20px}}
+</style>
+</head>
+<body>
+<header>
+ <h1>📊 Dashboard EDA — Demanda Profissional CAGED</h1>
+ <p>Análise Exploratória segundo Bussab &amp; Morettin (2010) · evidências que sustentam as decisões de modelagem preditiva</p>
+ <p>Autora: Fernanda Carnevalle de Melo · EDA 26/10/2026 · Relatório 30/10/2026 · Base: <b>workspace.silver.novo_caged_movimentacoes_semestral</b> + série mensal do bronze</p>
+</header>
+<div class="wrap">
+
+ <div class="kpis">
+  <div class="kpi"><div class="v">+46%</div><div class="t">crescimento das admissões 2021S1 → 2026S1 (9,46 → 13,81 mi por semestre)</div></div>
+  <div class="kpi"><div class="v">68/72</div><div class="t">meses completos — nenhum mês incompleto na base; 2026S2 é semestre parcial (jul–ago)</div></div>
+  <div class="kpi"><div class="v">11,26%</div><div class="t">CV real da demanda semestral sem o parcial (21,23% com ele — artefato de cobertura)</div></div>
+  <div class="kpi"><div class="v">r = 0,98</div><div class="t">admissões × desligamentos (lei da rotatividade) — não usar juntas no modelo</div></div>
+ </div>
+
+ <section>
+  <h2>1 · Panorama da série</h2>
+  <p class="sub">68 meses completos (jan/2021 – ago/2026) · passe o mouse sobre os pontos para ver os valores</p>
+  <div class="card">
+   <div id="chart-mensal"></div>
+   <div class="legenda"><span class="chip" style="background:var(--azul)"></span>Admissões <span class="chip" style="background:var(--laranja)"></span>Desligamentos</div>
+   <div class="nota"><b>Leitura:</b> tendência de alta consistente (~46% no período) com sazonalidade mensal marcada — vales em dezembro (saldo negativo em 2021–2025) e picos em fev–mar. É essa dupla estrutura (tendência + calendário) que o modelo preditivo precisa capturar.</div>
+  </div>
+  <div class="card">
+   <div id="chart-salario"></div>
+   <div class="legenda"><span class="chip" style="background:var(--azul)"></span>Mediana salarial de admissão (R$)</div>
+   <div class="nota"><b>Leitura:</b> remuneração típica de contratação subiu de R$ 1.372 a R$ 2.000 (+46%) com evolução estável — o contraste com o volume volátil justifica o salário como <b>exógena validada</b> (r = 0,68 com admissões em t+1).</div>
+  </div>
+  <div class="card">
+   <div id="chart-semestral"></div>
+   <div class="legenda"><span class="chip" style="background:var(--azul)"></span>Semestres completos <span class="chip" style="background:var(--verm)"></span>2026S2 parcial (2 de 6 meses)</div>
+   <div class="nota"><b>Leitura:</b> em barras semestrais, 2026S2 (jul–ago) parece um desabamento — é efeito de cobertura, não de mercado. Toda comparação semestral deve usar os 11 semestres completos.</div>
+   <div class="alert">⚠️ <b>2025S2 — saldo quase nulo (+42.982):</b> único alerta de negócio real da série (não é artefato). Candidato a investigação com testes de mudança de regime antes de fechar o modelo.</div>
+  </div>
+ </section>
+
+ <section>
+  <h2>2 · Da evidência à decisão de ML</h2>
+  <p class="sub">cada achado da EDA (à esquerda) com a decisão de modelagem que ele sustenta (em verde)</p>
+  <div class="evgrid">
+   <div class="ev">
+    <span class="tag">DISTRIBUIÇÕES MARGINAIS</span>
+    <p><b>A “não-normalidade” era artefato.</b> Shapiro-Wilk rejeita normalidade com 2026S2 (W=0,8317; p=0,0220), mas nos 11 semestres completos a rejeição desaparece (W=0,9713; <b>p=0,8990</b>). Assimetria vai de −1,62 a −0,11 e o CV cai de 21,23% para 11,26%.</p>
+    <div class="dec"><b>Decisão:</b> resumir por medianas e quartis; log-transformação é opcional, não obrigatória — a série real é compatível com normal e de volatilidade moderada.</div>
+   </div>
+   <div class="ev">
+    <span class="tag">SÉRIES TEMPORAIS · ADF</span>
+    <p><b>Não-estacionária (p=0,2168).</b> A série carrega tendência e memória — ACF decai gradualmente, PACF com picos nos primeiros lags. Não é um fenômeno “aleatório em torno de um nível”.</p>
+    <div class="dec"><b>Decisão:</b> diferenciar a série ou modelar tendência + sazonalidade explicitamente antes de qualquer ARIMA clássico.</div>
+   </div>
+   <div class="ev">
+    <span class="tag">SÉRIES TEMPORAIS · STL</span>
+    <p><b>Sazonalidade dominante.</b> A decomposição mostra padrão sazonal semestral/mensal capturando a maior parte da estrutura; vales em dez e picos em fev–mar se repetem todos os anos.</p>
+    <div class="dec"><b>Decisão:</b> componente sazonal é obrigatório (SARIMA ou dummies); lags de 6–12m como features para carregar o calendário de contratações.</div>
+   </div>
+   <div class="ev">
+    <span class="tag">CORRELAÇÕES</span>
+    <p><b>Multicolinearidade adm × desl (r=0,98).</b> Mercados que contratam mais também desligam mais — a lei da rotatividade. Um modelo linear não consegue separar os efeitos das duas.</p>
+    <div class="dec"><b>Decisão:</b> nunca usar admissões e desligamentos juntos; usar <b>desl_lag_1m</b> como proxy antecedente (r=0,69 em t+1).</div>
+   </div>
+   <div class="ev">
+    <span class="tag">FEATURE ENGINEERING</span>
+    <p><b>Pódio em t+1: tendência (0,70), desligamentos defasados (0,69) e salário defasado (0,68).</b> Notável: o lag-1 do próprio alvo fica atrás (0,40) — a demanda não é pura inércia.</p>
+    <div class="dec"><b>Decisão:</b> exógenas defasadas (rotatividade e remuneração) antecipam a demanda melhor que o mês anterior sozinho — entrar no feature set validado sem vazamento.</div>
+   </div>
+   <div class="ev">
+    <span class="tag">FEATURE ENGINEERING</span>
+    <p><b>saldo_lag_1m negativo em t+1 (r = −0,37).</b> Meses de saldo líquido (admissões − desligamentos) muito alto antecedem desaceleração no mês seguinte.</p>
+    <div class="dec"><b>Decisão:</b> é sinal de <b>ciclo</b>, não de tendência — incluir como feature de correção cíclica, não como preditor de volume.</div>
+   </div>
+  </div>
+ </section>
+
+ <section>
+  <h2>3 · Ranking de features — correlação com admissões em t+1</h2>
+  <p class="sub">poder preditivo real: só features calculáveis hoje que se relacionam com o próximo mês</p>
+  <div class="card">
+   <div id="chart-feat"></div>
+   <div class="nota"><b>Leitura:</b> todas as top-10 são significativas (p &lt; 0,005) — a ordenação não é ruído amostral. Como nenhuma feature passa de 0,71, o próximo mês é explicado por poucos sinais fortes + imprevisibilidade: <b>o modelo terá erro não-nulo, e isso é esperado</b> (não é falha).</div>
+  </div>
+ </section>
+
+ <section>
+  <h2>4 · Próximos passos para o ML</h2>
+  <div class="card">
+   <ol class="road">
+    <li><b>Modelar no nível mensal (68 pontos)</b> — estimadores mais estáveis que os 12 semestres; é a granularidade do modelo.</li>
+    <li><b>Baseline SARIMA</b> (ou log + dummies sazonais), comparado com Holt-Winters e Prophet — seleção por MAE/MAPE com validação <b>temporal (janela expansiva)</b>, nunca embaralhada.</li>
+    <li><b>Feature set validado sem vazamento:</b> lags (1, 3, 6, 12m), médias móveis (3m/12m), <b>desl_lag_1m</b>, <b>salario_lag_1m</b>, t e mes_sin/mes_cos — tudo defasado, nada de futuro.</li>
+    <li><b>Estratificar por UF × Seção CNAE</b> na próxima sprint — a EDA atual é Brasil agregado; regionalismos podem mudar o ranking de features.</li>
+    <li><b>Change-point / mudança de regime:</b> investigar o saldo quase nulo de 2025S2 antes de fechar o modelo (recessão real vs. anomalia de coleta).</li>
+    <li><b>Pipeline MLflow:</b> features da Seção 6.1 + treino + registro versionado; dashboard de projeção com <b>intervalo de confiança 95%</b>.</li>
+    <li><b>Completar 2026:</b> reingestar set–dez, fechar o semestre e revalidar (reexecutar contraprovas com 12 semestres completos).</li>
+   </ol>
+  </div>
+ </section>
+
+ <div class="foot">
+  <b>Fontes:</b> workspace.silver.novo_caged_movimentacoes_semestral (12 semestres) · workspace.silver.novo_caged_movimentacoes (série mensal, 68 meses) · relatório EDA_caged.md · notebook notebooks/03_analytics/EDA (re-execução completa 30/10/2026).<br/>
+  Números recalculados sem 2026S2 (contraprovas de cobertura) embutidos nos cards. Arquivo autocontido — funciona offline em qualquer navegador (gráficos em SVG, sem bibliotecas externas).
+ </div>
+</div>
+
+<script>
+const M=[[202101,1550075,1293016,257059,1372.3],[202102,1715425,1317510,397915,1364.04],[202103,1626885,1450555,176330,1392],[202104,1396311,1282389,113922,1408],[202105,1558316,1279611,278705,1387.62],[202106,1609748,1299712,310036,1400],[202107,1666051,1349326,316725,1400],[202108,1819411,1446067,373344,1400],[202109,1789967,1472974,316993,1403.05],[202110,1760739,1507656,253083,1415],[202111,1772766,1448654,324112,1416],[202112,1437910,1703721,-265811,1415.02],[202201,1777646,1622468,155178,1466.05],[202202,2013143,1684636,328507,1453.26],[202203,1953071,1816882,136189,1476.05],[202204,1854557,1657591,196966,1491.42],[202205,1960960,1682942,277018,1500],[202206,1898876,1620932,277944,1500],[202207,1886537,1667635,218902,1515.8],[202208,2051800,1773161,278639,1524.01],[202209,1926572,1648487,278085,1531.2],[202210,1789462,1630008,159454,1551],[202211,1747894,1612399,135495,1553],[202212,1382923,1813934,-431011,1550],[202301,1874226,1790929,83297,1600],[202302,1949844,1708059,241785,1596.32],[202303,2168418,1973247,195171,1600],[202304,1865279,1685274,180005,1610.4],[202305,2000202,1844932,155270,1612],[202306,1914130,1756932,157198,1625.67],[202307,1883198,1740496,142702,1640],[202308,2099211,1878367,220844,1642.19],[202309,1917057,1705293,211764,1650],[202310,1941281,1750915,190366,1671.51],[202311,1866752,1736655,130097,1667.23],[202312,1502563,1932722,-430159,1674],[202401,2067817,1887422,180395,1701],[202402,2249070,1942959,306111,1700],[202403,2262420,2018105,244315,1701.03],[202404,2260439,2020406,240033,1723],[202405,2116326,1984515,131811,1725.41],[202406,2071649,1869944,201705,1740],[202407,2187633,1999612,188021,1760],[202408,2231410,1998897,232513,1751.2],[202409,2163929,1916111,247818,1769.22],[202410,2222962,2090248,132714,1787],[202411,1978371,1871746,106625,1786.4],[202412,1524251,2059798,-535547,1779],[202501,2271611,2134308,137303,1812.99],[202502,2579192,2147197,431995,1800],[202503,2234662,2163086,71576,1821.6],[202504,2282187,2024659,257528,1841.4],[202505,2256225,2107233,148992,1839.2],[202506,2139182,1972561,166621,1860],[202507,2251440,2121665,129775,1868],[202508,2239895,2092537,147358,1869.32],[202509,2292492,2079490,213002,1885.38],[202510,2271460,2186313,85147,1900],[202511,1979902,1894038,85864,1900],[202512,1523309,2141473,-618164,1900],[202601,2208030,2095696,112334,1950],[202602,2381767,2126446,255321,1945.2],[202603,2526660,2298452,228208,1958.81],[202604,2268655,2182767,85888,1979.17],[202605,2207303,2134343,72960,1980],[202606,2220131,2074970,145161,2000],[202607,2262888,2204320,58568,2000],[202608,2294563,2128736,165827,2000]];
+const SEM=[["2021S1",9456760],["2021S2",10246844],["2022S1",11458253],["2022S2",10785188],["2023S1",11772099],["2023S2",11210062],["2024S1",13027721],["2024S2",12308556],["2025S1",13763059],["2025S2",12558498],["2026S1",13812546],["2026S2",4557451]];
+const FEAT=[["t (tendência)",0.7016],["desl_lag_1m",0.6931],["salario_lag_1m",0.6831],["adm_media_12m",0.5101],["adm_lag_12m",0.5037],["adm_std_3m",0.4373],["adm_media_3m",0.4148],["adm_lag_6m",0.4067],["adm_lag_1m",0.4042],["adm_lag_3m",0.3495],["saldo_lag_1m",-0.3659]];
+const MES=["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+const nf=n=>n.toLocaleString('pt-BR');
+const mi=v=>(v/1e6).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+const mLab=c=>MES[c%100-1]+"/"+Math.floor(c/100);
+
+(function(){
+ const L=64,R=895,T=26,B=298,n=M.length;
+ const X=i=>L+i*(R-L)/(n-1), yMin=1.15e6, yMax=2.75e6;
+ const Y=v=>T+(B-T)*(1-(v-yMin)/(yMax-yMin));
+ let s=`<svg viewBox="0 0 920 340" role="img" aria-label="Série mensal de admissões e desligamentos">`;
+ [1.2,1.6,2.0,2.4].forEach(g=>{const gy=Y(g*1e6);s+=`<line class="grid" x1="${L}" x2="${R}" y1="${gy.toFixed(1)}" y2="${gy.toFixed(1)}"/><text class="tick" x="${L-7}" y="${(gy+4).toFixed(1)}" text-anchor="end">${g.toLocaleString('pt-BR')} mi</text>`});
+ M.forEach((r,i)=>{if(r[0]%100===1)s+=`<text class="tick" x="${X(i).toFixed(1)}" y="${B+17}" text-anchor="middle">${Math.floor(r[0]/100)}</text>`});
+ const pts=k=>M.map((r,i)=>X(i).toFixed(1)+","+Y(r[k]).toFixed(1)).join(" ");
+ s+=`<polyline class="serieA" points="${pts(1)}"/><polyline class="serieB" points="${pts(2)}"/>`;
+ M.forEach((r,i)=>{s+=`<circle class="ptB" cx="${X(i).toFixed(1)}" cy="${Y(r[2]).toFixed(1)}" r="3"><title>${mLab(r[0])} — Desligamentos: ${nf(r[2])}</title></circle>`});
+ M.forEach((r,i)=>{s+=`<circle class="ptA" cx="${X(i).toFixed(1)}" cy="${Y(r[1]).toFixed(1)}" r="3"><title>${mLab(r[0])} — Admissões: ${nf(r[1])} · Desligamentos: ${nf(r[2])} · Saldo: ${nf(r[3])}</title></circle>`});
+ s+=`<line x1="${L}" x2="${L}" y1="${T}" y2="${B}" stroke="#c8d2dd"/><line x1="${L}" x2="${R}" y1="${B}" y2="${B}" stroke="#c8d2dd"/></svg>`;
+ document.getElementById('chart-mensal').innerHTML=s;
+})();
+
+(function(){
+ const L=64,R=895,T=24,B=175,n=M.length;
+ const X=i=>L+i*(R-L)/(n-1), yMin=1300, yMax=2100;
+ const Y=v=>T+(B-T)*(1-(v-yMin)/(yMax-yMin));
+ let s=`<svg viewBox="0 0 920 215" role="img" aria-label="Mediana salarial mensal de admissão">`;
+ [1400,1600,1800,2000].forEach(g=>{const gy=Y(g);s+=`<line class="grid" x1="${L}" x2="${R}" y1="${gy.toFixed(1)}" y2="${gy.toFixed(1)}"/><text class="tick" x="${L-7}" y="${(gy+4).toFixed(1)}" text-anchor="end">R$ ${nf(g)}</text>`});
+ M.forEach((r,i)=>{if(r[0]%100===1)s+=`<text class="tick" x="${X(i).toFixed(1)}" y="${B+16}" text-anchor="middle">${Math.floor(r[0]/100)}</text>`});
+ s+=`<polyline class="serieA" points="${M.map((r,i)=>X(i).toFixed(1)+","+Y(r[4]).toFixed(1)).join(" ")}"/>`;
+ M.forEach((r,i)=>{s+=`<circle class="ptA" cx="${X(i).toFixed(1)}" cy="${Y(r[4]).toFixed(1)}" r="3"><title>${mLab(r[0])} — Mediana salarial: R$ ${r[4].toLocaleString('pt-BR',{minimumFractionDigits:2})}</title></circle>`});
+ s+=`<line x1="${L}" x2="${L}" y1="${T}" y2="${B}" stroke="#c8d2dd"/><line x1="${L}" x2="${R}" y1="${B}" y2="${B}" stroke="#c8d2dd"/></svg>`;
+ document.getElementById('chart-salario').innerHTML=s;
+})();
+
+(function(){
+ const L=64,R=895,T=28,B=232,slot=(R-L)/12,bw=slot*0.62,yMax=14.5e6;
+ const Y=v=>T+(B-T)*(1-v/yMax);
+ let s=`<svg viewBox="0 0 920 262" role="img" aria-label="Admissões por semestre">`;
+ [4,8,12].forEach(g=>{const gy=Y(g*1e6);s+=`<line class="grid" x1="${L}" x2="${R}" y1="${gy.toFixed(1)}" y2="${gy.toFixed(1)}"/><text class="tick" x="${L-7}" y="${(gy+4).toFixed(1)}" text-anchor="end">${g} mi</text>`});
+ SEM.forEach((d,i)=>{
+  const x=L+i*slot+(slot-bw)/2,yv=Y(d[1]);
+  const cls=i===11?"barP":"barA";
+  s+=`<rect class="${cls}" x="${x.toFixed(1)}" y="${yv.toFixed(1)}" width="${bw.toFixed(1)}" height="${(B-yv).toFixed(1)}" rx="3"><title>${d[0]}${i===11?" (parcial — jul/ago)":""} — Admissões: ${nf(d[1])}</title></rect>`;
+  s+=`<text class="tick" x="${(x+bw/2).toFixed(1)}" y="${B+16}" text-anchor="middle">${d[0].slice(2)}</text>`;
+  s+=`<text class="tick" x="${(x+bw/2).toFixed(1)}" y="${(yv-6).toFixed(1)}" text-anchor="middle">${mi(d[1])}</text>`;
+ });
+ s+=`<line x1="${L}" x2="${L}" y1="${T}" y2="${B}" stroke="#c8d2dd"/><line x1="${L}" x2="${R}" y1="${B}" y2="${B}" stroke="#c8d2dd"/></svg>`;
+ document.getElementById('chart-semestral').innerHTML=s;
+})();
+
+(function(){
+ const rows=FEAT.length,rh=26,T=8,L=160,zeroX=500,k=420/0.75,H=T+rows*rh+16;
+ let s=`<svg viewBox="0 0 920 ${H}" role="img" aria-label="Correlação das features com admissões em t mais 1">`;
+ s+=`<line x1="${zeroX}" x2="${zeroX}" y1="${T}" y2="${T+rows*rh}" stroke="#c8d2dd"/>`;
+ s+=`<text class="tick" x="${zeroX}" y="${T-2}" text-anchor="middle">r</text>`;
+ FEAT.forEach((f,i)=>{
+  const y=T+i*rh+5,w=Math.abs(f[1])*k,x=f[1]>=0?zeroX:zeroX-w;
+  const col=f[1]<0?'#d94f4f':(i<3?'#0e2a47':'#5b7fa6');
+  s+=`<text class="tick" x="${L}" y="${y+12}" text-anchor="end" font-size="12">${f[0]}</text>`;
+  s+=`<rect x="${x.toFixed(1)}" y="${y}" width="${w.toFixed(1)}" height="17" rx="3" fill="${col}"><title>${f[0]} — r = ${f[1].toLocaleString('pt-BR',{minimumFractionDigits:4,maximumFractionDigits:4})} com admissões em t+1</title></rect>`;
+  const vx=f[1]>=0?x+w+6:x-6;
+  s+=`<text x="${vx.toFixed(1)}" y="${y+13}" font-size="11.5" fill="#5b6b7c" text-anchor="${f[1]>=0?'start':'end'}">${f[1].toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})}</text>`;
+ });
+ s+='</svg>';
+ document.getElementById('chart-feat').innerHTML=s;
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DemandA — Dashboard INEP: Formação Superior</title>
+<style>
+  :root{--azul:#001236;--azul2:#009999;--verm:#D86DCD;--verde:#009999;--tinta:#1c2733;--cinza:#5b6b7c;--fundo:#f4f7fb;--card:#ffffff;--borda:#dce4ee;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--fundo);color:var(--tinta);line-height:1.55;}
+  .container{max-width:1100px;margin:0 auto;padding:0 18px 60px;}
+  header{background:linear-gradient(120deg,#009999 0%,#004d7a 60%,#001236 100%);color:#fff;padding:44px 18px 38px;text-align:center;}
+  header h1{font-size:26px;font-weight:700;letter-spacing:.4px;}
+  header p.sub{margin-top:8px;font-size:14.5px;opacity:.92;}
+  header p.meta{margin-top:14px;font-size:12.5px;opacity:.75;}
+  h2.secao{margin:44px 0 6px;font-size:21px;color:#001236;display:flex;align-items:center;gap:10px;}
+  h2.secao .num{background:#009999;color:#fff;border-radius:8px;font-size:15px;padding:2px 11px;}
+  p.abre{color:var(--cinza);font-size:14px;margin-bottom:16px;max-width:900px;}
+  .card{background:var(--card);border:1px solid var(--borda);border-radius:14px;padding:20px 22px;margin-bottom:18px;box-shadow:0 2px 6px rgba(23,57,94,.06);}
+  .card h3{font-size:16px;color:#001236;margin-bottom:8px;}
+  .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:-26px;}
+  .kpi{background:var(--card);border:1px solid var(--borda);border-radius:14px;padding:16px 18px;box-shadow:0 3px 10px rgba(23,57,94,.10);}
+  .kpi .tt{font-size:11px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#8a97a5;margin-bottom:2px;}
+  .kpi .v{font-size:25px;font-weight:700;color:var(--azul);}
+  .kpi .v.vv{color:#D86DCD;} .kpi .v.vl{color:#009999;}
+  .kpi .t{font-size:12.5px;color:var(--cinza);margin-top:3px;}
+  .tabela{width:100%;border-collapse:collapse;font-size:13.5px;}
+  .tabela th{background:#009999;color:#fff;padding:8px 10px;text-align:left;font-weight:600;}
+  .tabela td{padding:7px 10px;border-bottom:1px solid var(--borda);}
+  .tabela tr:nth-child(even) td{background:#f6f9fc;}
+  .tabela .num{text-align:right;font-variant-numeric:tabular-nums;}
+  .destaque{background:#faf0f9;border-left:4px solid #D86DCD;border-radius:0 10px 10px 0;padding:12px 16px;margin:14px 0;font-size:13.5px;}
+  .destaque b{color:#9c3d92;}
+  .importa{background:#e6f5f5;border-left:4px solid #009999;border-radius:0 10px 10px 0;padding:12px 16px;margin:14px 0;font-size:13.5px;}
+  .importa b{color:#006969;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+  .grafico{background:var(--card);border:1px solid var(--borda);border-radius:14px;padding:16px 18px;margin:14px 0;}
+  .grafico h4{font-size:14.5px;color:#001236;margin-bottom:4px;}
+  .grafico p.exp{font-size:12.5px;color:var(--cinza);margin-bottom:8px;}
+  .legenda{margin-top:8px;font-size:13px;color:var(--cinza);display:flex;flex-wrap:wrap;gap:14px;}
+  .chip{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px;}
+  svg text{font-family:'Segoe UI',sans-serif;}
+  .grid{stroke:#e6edf5;stroke-width:1;}
+  .tick{fill:#5b6b7c;font-size:13px;}
+  .feat{border:1px solid var(--borda);border-radius:12px;padding:14px 16px;margin-bottom:12px;background:var(--card);}
+  .feat .fn{font-weight:700;color:#001236;font-size:14px;font-family:Consolas,monospace;}
+  .feat .fp{font-size:13px;color:var(--cinza);margin-top:3px;}
+  .feat .pq{font-size:13px;margin-top:7px;}
+  .feat .ref{font-size:11.5px;color:#8a97a5;margin-top:6px;font-style:italic;}
+  .passo{display:flex;gap:14px;margin-bottom:14px;}
+  .passo .n{flex:0 0 34px;height:34px;background:#009999;color:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;}
+  .passo .tx h3{font-size:15px;color:#001236;}
+  .passo .tx p{font-size:13px;color:var(--cinza);margin-top:3px;}
+  footer{margin-top:46px;padding-top:18px;border-top:1px solid var(--borda);font-size:12px;color:var(--cinza);}
+  @media(max-width:760px){.kpis,.grid2{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<header>
+  <h1>DemandA · Dashboard INEP</h1>
+  <p class="sub">Formação Superior — Censo da Educação Superior INEP · 2021–2024 (4 censos, 27 UFs, 353 campos)</p>
+  <p class="meta">MBA Data Engineering &amp; Analytics · Fernanda Carnevalle de Melo · 02/11/2026 · Fonte: gold <code>fato_inep_educacao_brasil_anual</code> + <code>fato_inep_educacao_uf_anual</code> (v2) · EDA segundo Bussab &amp; Morettin (2010) · Contraparte: <code>dashboard_caged.html</code> (demanda)</p>
+</header>
+<div class="container">
+
+<div class="kpis">
+  <div class="kpi"><div class="tt">Matrículas · 2024</div><div class="v">10,2 mi</div><div class="t">estoque de formação em 2024 — +13,8% desde 2021: o sistema cresce</div></div>
+  <div class="kpi"><div class="tt">Ingressantes · 2024</div><div class="v vl">5,0 mi</div><div class="t">+27% desde 2021 — a entrada acelera (o motor do crescimento)</div></div>
+  <div class="kpi"><div class="tt">Concluintes · 2024</div><div class="v">1,33 mi</div><div class="t">+0,5% desde 2021 — a saída está estagnada: formam-se os mesmos 1,3 mi/ano</div></div>
+  <div class="kpi"><div class="tt">Estoque EaD</div><div class="v vl">50,7%</div><div class="t">das matrículas já são a distância — o EaD ultrapassou o presencial no estoque</div></div>
+  <div class="kpi"><div class="tt">Ingresso EaD</div><div class="v vl">66,8%</div><div class="t">2 de cada 3 novos alunos entram a distância — a transição acelera</div></div>
+  <div class="kpi"><div class="tt">Inscritos por vaga</div><div class="v vv">1,71</div><div class="t">disputa por vaga presencial subiu 18% (1,45 → 1,71) — aperto de oferta</div></div>
+</div>
+
+<h2 class="secao"><span class="num">1</span> A base e suas quatro dimensões — quem soma errado</h2>
+<p class="abre">O Censo fotografa <b>curso × município × IES</b> uma vez por ano. O risco desta base não é mês incompleto (como no CAGED) — é <b>dupla contagem de dimensões</b> e oferta que parece sumir.</p>
+<div class="card">
+  <table class="tabela">
+    <tr><th>Dim</th><th>Conteúdo</th><th>UF</th><th class="num">Vagas 2024</th></tr>
+    <tr><td><b>1</b></td><td>Presencial localizado</td><td>27 UFs</td><td class="num">5.075.146</td></tr>
+    <tr><td><b>2</b></td><td>EaD territorializado</td><td>tem UF</td><td class="num">~7 mil</td></tr>
+    <tr><td><b>3</b></td><td>EaD nacional</td><td>sem UF (por design)</td><td class="num">18.583.348</td></tr>
+    <tr><td><b>4</b></td><td>Sem localização</td><td>sem UF</td><td class="num">0</td></tr>
+  </table>
+  <div class="importa"><b>Isso é importante porque…</b> as regras da gold v2 foram validadas (diferenças silver×gold = 0 em todas as medidas e anos): <b>estudantes</b> = dimensões 1+2; <b>oferta</b> (cursos, vagas, inscritos) = <b>somente dimensão 1</b> (presencial). Somar <code>quantidade_vagas</code> da silver sem filtrar a dimensão é o erro clássico desta base.</div>
+  <div class="destaque"><b>A oferta que “some”:</b> as 18,6 milhões de vagas do EaD nacional (dimensão 3) existem <b>apenas na silver</b> — são 3,7× a oferta presencial e ficam invisíveis à gold. Qualquer análise de oferta total deve buscá-las lá; concluir que “o Brasil oferta poucas vagas” pela gold é falso por construção.</div>
+</div>
+
+<h2 class="secao"><span class="num">2</span> Evolução 2021→2024 — entrada acelerada, saída estagnada</h2>
+<p class="abre">No índice 2021 = 100, as quatro medidas principais contam a história: <b>o ingresso dispara, o estoque acompanha devagar, a formatura não sai do lugar — e a oferta presencial encolhe</b>.</p>
+<div class="grafico">
+  <h4>Crescimento relativo desde 2021 (índice 100 = ano-base)</h4>
+  <p class="exp">Rótulos = valor do índice em cada ano (todas as linhas partem de 100, por isso o primeiro ponto não tem rótulo). Teal = medidas de estudante; navy = concluintes; rosa = oferta presencial (contraindo). Vagas/inscritos = presencial (dim 1).</p>
+  <div id="chart-index"></div>
+</div>
+<div class="importa"><b>Isso é importante porque…</b> o retrato é de <b>transição de modalidade com aperto de oferta presencial</b>: o estoque cresce +13,8%, mas as vagas presenciais caem 14,6% e a disputa por vaga sobe 18% — o motor do crescimento é o EaD. Para o modelo integrado com o CAGED: as duas modalidades precisam ser modeladas separadamente, porque o presencial encolhe e o EaD explode.</div>
+<div class="card">
+  <table class="tabela">
+    <tr><th>Indicador</th><th class="num">2021</th><th class="num">2024</th><th class="num">Variação</th><th>Leitura</th></tr>
+    <tr><td>Matrículas</td><td class="num">8.984.396</td><td class="num">10.224.686</td><td class="num"><b>+13,8%</b></td><td>expansão do estoque</td></tr>
+    <tr><td>Ingressantes</td><td class="num">3.943.733</td><td class="num">5.009.116</td><td class="num"><b>+27,0%</b></td><td>entrada acelerada</td></tr>
+    <tr><td>Concluintes</td><td class="num">1.326.961</td><td class="num">1.333.515</td><td class="num">+0,5%</td><td>saída estagnada</td></tr>
+    <tr><td>Vagas presenciais</td><td class="num">5.942.212</td><td class="num">5.075.146</td><td class="num"><b>−14,6%</b></td><td>contração da oferta</td></tr>
+    <tr><td>Inscritos por vaga pres.</td><td class="num">1,45</td><td class="num">1,71</td><td class="num">+18%</td><td>disputa crescendo</td></tr>
+  </table>
+</div>
+
+<h2 class="secao"><span class="num">3</span> A distribuição por campo — poucos gigantes, muita cauda</h2>
+<p class="abre">As 10,2 milhões de matrículas se espalham por 353 campos de formação — e a distribuição é <b>log-normal</b>: o tamanho dos campos multiplica, não soma.</p>
+<div class="card">
+  <table class="tabela">
+    <tr><th>Estatística (matrículas por campo, 2024)</th><th class="num">Valor</th><th>Tradução</th></tr>
+    <tr><td>Mínimo</td><td class="num">1</td><td>existem campos com uma única matrícula</td></tr>
+    <tr><td>Mediana</td><td class="num">2.327</td><td>metade dos campos é minúscula</td></tr>
+    <tr><td>Média</td><td class="num">28.965</td><td>12× a mediana — arrastada pelos gigantes</td></tr>
+    <tr><td>Máximo</td><td class="num">887.502</td><td>Pedagogia, sozinha, vale 8,7% de todas as matrículas</td></tr>
+    <tr><td><b>Coeficiente de variação</b></td><td class="num"><b>304,9%</b></td><td>concentração estrutural — <i>não</i> é “volatilidade”</td></tr>
+    <tr><td>Shapiro-Wilk bruto → log</td><td class="num">p 1,4e-33 → 0,073</td><td>rejeição violenta que <b>desaparece no log</b> = log-normal confirmada</td></tr>
+  </table>
+  <div class="importa"><b>Isso é importante porque…</b> a lição metodológica atravessa o projeto: (i) resumir por <b>mediana e quartis</b>, nunca por média; (ii) <b>modelar em log</b> — em bruto, qualquer correlação será dominada por Pedagogia/Direito/Administração; (iii) Spearman sempre como contraponto do Pearson. É a mesma disciplina do “semestre parcial” no CAGED: identificar o artefato antes de interpretar o número.</div>
+</div>
+<div class="grafico">
+  <h4>Top 8 campos por matrículas (2024)</h4>
+  <p class="exp">Teal = matrículas por campo CINE. Rótulos = matrículas em cada barra. Os 3 primeiros campos concentram quase um quarto de todas as matrículas do país.</p>
+  <div id="chart-campos"></div>
+</div>
+
+<h2 class="secao"><span class="num">4</span> O mapa por área — Saúde em alta, Engenharia em queda, TIC acelerando</h2>
+<p class="abre">Agregando os campos em áreas CINE gerais: onde a formação cresce e onde recua — o mapa que encontrará a demanda do CAGED.</p>
+<div class="grafico">
+  <h4>Variação de matrículas por área, 2021→2024</h4>
+  <p class="exp">Teal = crescimento; rosa = queda (as únicas grandes áreas em contração). Rótulos = variação % em cada barra.</p>
+  <div id="chart-areas"></div>
+</div>
+<div class="importa"><b>Isso é importante porque…</b> este é o mapa da <b>oferta de formação</b>: <b>Saúde cresce +25%</b> (alinhada à demanda de rotatividade que o CAGED mostra) e <b>Computação/TIC +15,3%</b> com share de ingressantes (9,8%) acima do estoque (7,8%) — entrada acelerando. <b>Engenharia é a única grande área em queda (−5,4%)</b>: se o mercado demandar engenharia/produção, há risco de gargalo de formação. Top-3 áreas (Negócios+Saúde+Educação) = <b>67% das matrículas</b>.</div>
+
+<h2 class="secao"><span class="num">5</span> A geografia da formação — SP concentra quase um quarto</h2>
+<p class="abre">A distribuição territorial é tão desigual quanto a de campos — e pelos mesmos motivos: população, renda e sede de IES.</p>
+<div class="grafico">
+  <h4>Share de matrículas por UF (2024, top 8)</h4>
+  <p class="exp">Teal = top UFs; rosa = São Paulo, o outlier (IQR e MAD concordam). Rótulos = share % do total nacional. Top-5 UFs = 55% das matrículas.</p>
+  <div id="chart-uf"></div>
+</div>
+<div class="importa"><b>Isso é importante porque…</b> para o modelo integrado CAGED×INEP, a estratificação por UF é <b>obrigatória</b>: prever formação nacional e aplicar por estado introduziria viés grave a favor de SP (23,9% do país, outlier em IQR e MAD). A gold por UF já existe (<code>fato_inep_educacao_uf_anual</code>, 27 UFs) e é a base correta do join com o CAGED por UF.</div>
+
+<h2 class="secao"><span class="num">6</span> Relações bivariadas — medidas gêmeas e o par mais informativo</h2>
+<p class="abre">Com distribuição log-normal, toda divergência Pearson &lt; Spearman é sintoma de não-linearidade multiplicativa — e aqui a regra se confirmou em todos os pares com oferta.</p>
+<div class="card">
+  <table class="tabela">
+    <tr><th>Par (campo CINE, 2024, n=353)</th><th class="num">Pearson</th><th class="num">Spearman</th><th>Leitura</th></tr>
+    <tr><td>Matrículas × Ingressantes</td><td class="num">0,98</td><td class="num">0,98</td><td>estoque e entrada andam juntos</td></tr>
+    <tr><td>Matrículas × Concluintes</td><td class="num">0,98</td><td class="num">0,95</td><td>campos grandes formam mais</td></tr>
+    <tr><td>Vagas × Inscritos</td><td class="num">0,80</td><td class="num"><b>0,96</b></td><td><b>divergência forte: relação multiplicativa</b></td></tr>
+    <tr><td>Vagas × Ingressantes</td><td class="num">0,94</td><td class="num">0,97</td><td>divergência: log</td></tr>
+    <tr><td>Inscritos × Ingressantes</td><td class="num">0,89</td><td class="num">0,98</td><td>divergência: log</td></tr>
+  </table>
+  <div class="importa"><b>Isso é importante porque…</b> (1) <b>multicolinearidade estrutural</b>: matrículas, ingressantes e concluintes são quase a mesma variável em escalas diferentes (todas &gt; 0,93) — a solução é a mesma da EDA CAGED (admissões × desligamentos, 0,98): <b>uma medida por conceito</b> e derivar razões. (2) <b>Vagas × Inscritos é o par mais informativo</b>: Pearson 0,80 muito abaixo de Spearman 0,96 — campos grandes recebem proporcionalmente mais inscritos, e a razão inscritos/vaga é a medida de <b>escassez relativa</b> que interessa ao cruzamento com demanda.</div>
+</div>
+
+<h2 class="secao"><span class="num">7</span> A grande transição — presencial contrai, EaD explode</h2>
+<p class="abre">A mudança estrutural do período: o aluno migrou de canal. O fluxo de entrada já é majoritariamente digital; o estoque ainda não — a transição <b>acelera</b>.</p>
+<div class="grafico">
+  <h4>Participação do EaD em ingressantes e matrículas (2021–2024)</h4>
+  <p class="exp">Rosa = share EaD dos ingressantes (o fluxo); teal = share EaD das matrículas (o estoque). Rótulos = % em cada ano. A linha de cima (fluxo) lidera a de baixo (estoque): a transição acelera.</p>
+  <div id="chart-ead"></div>
+</div>
+<div class="grid2">
+  <div class="card">
+    <h3>Matrículas: presencial −4,4% × EaD +39,7%</h3>
+    <p style="font-size:13.5px">Presencial: 5,27 → 5,04 mi. EaD: 3,71 → 5,19 mi — <b>o EaD ultrapassa o presencial no estoque em 2024</b> (50,7%).</p>
+  </div>
+  <div class="card">
+    <h3>Concluintes: presencial −13,4% × EaD +24,7%</h3>
+    <p style="font-size:13.5px">Presencial: 842 → 729 mil. EaD: 485 → 604 mil — <b>604 mil formandos EaD/ano</b> batendo à porta do mercado.</p>
+  </div>
+</div>
+<div class="importa"><b>Isso é importante porque…</b> o share de ingressantes EaD (66,8%) muito acima do share de matrículas (50,7%) diz que a transição <b>acelera</b>. Para o modelo de demanda profissional: os <b>concluintes que chegarão ao mercado de 2025 em diante são majoritariamente formados a distância</b> — se a formação do EaD difere do presencial por ocupação, a oferta de mão de obra por área muda de composição antes de mudar de volume.</div>
+<div class="destaque"><b>Caveat de leitura (transparência):</b> a queda de concluintes/ingressantes (33,7% → 26,6%) <b>não é taxa de evasão</b> — concluintes de 2024 majoritariamente ingressaram ~2020, antes da base; o boom de ingresso recente infla o denominador. Não interpretar como evasão crescente.</div>
+
+<h2 class="secao"><span class="num">8</span> Features para o modelo integrado (INEP → CAGED)</h2>
+<p class="abre">A EDA CAGED validou as exógenas de curto prazo (desligamentos e salário, r ≈ 0,68–0,69 com t+1); a base INEP traz as de <b>longo prazo</b> — concluintes de hoje são a oferta de mão de obra de 1–3 anos à frente. Todas defasadas, sem vazamento.</p>
+<div class="grid2">
+  <div class="card">
+    <div class="feat"><span class="fn">concluintes_cine_lag1..3a</span>
+      <div class="fp">“Quantos formandos em cada campo e estado, 1 a 3 anos atrás?”</div>
+      <div class="pq"><b>Por quê:</b> formandos são o fluxo que renova o estoque de qualificação — a mão de obra disponível amanhã.</div>
+      <div class="ref">Becker (1964) · Mincer (1974)</div></div>
+    <div class="feat"><span class="fn">ingressantes_cine_lag3..5a</span>
+      <div class="fp">“Quem entrou na faculdade a 3–5 anos?”</div>
+      <div class="pq"><b>Por quê:</b> é o pipeline — quem ingressou em 2021 em cursos de 4 anos conclui em 2024/25.</div>
+      <div class="ref">Horizonte típico de duração de curso (INEP)</div></div>
+    <div class="feat"><span class="fn">matriculas_cine_lag1a</span>
+      <div class="fp">“Qual o estoque de alunos por campo hoje?”</div>
+      <div class="pq"><b>Por quê:</b> capital humano em formação — dimensiona a oferta de 2 a 4 anos à frente.</div>
+      <div class="ref">Becker (1964)</div></div>
+  </div>
+  <div class="card">
+    <div class="feat"><span class="fn">share_ead_campo</span>
+      <div class="fp">“Que fração da formação do campo é a distância?”</div>
+      <div class="pq"><b>Por quê:</b> muda custo e escala da formação — sinal estrutural de como e onde a mão de obra será formada (66,8% dos ingressantes).</div>
+      <div class="ref">Evidência documentada nas Seções 5 e 7 desta EDA</div></div>
+    <div class="feat"><span class="fn">inscritos_por_vaga (presencial)</span>
+      <div class="fp">“Quantos candidatos disputam cada vaga do campo?”</div>
+      <div class="pq"><b>Por quê:</b> escassez relativa por área — sinal de atratividade e pressão (média nacional 1,45 → 1,71).</div>
+      <div class="ref">Seção 6 — par mais informativo</div></div>
+    <div class="feat"><span class="fn">Regras de integração com o CAGED</span>
+      <div class="fp">Ponte CINE×CBO (notebook 032) · defasagem mínima de 1 ano · estratificação por UF obrigatória (SP = 23,9%) · medidas sempre em log</div>
+      <div class="pq"><b>Por quê:</b> sem defasagem há vazamento (formação do próprio ano é dado do futuro); sem log, Pedagogia domina todas as correlações; sem UF, o viés de SP vira erro sistemático.</div>
+      <div class="ref">EDA CAGED · EDA INEP · escopo do projeto</div></div>
+  </div>
+</div>
+<div class="importa"><b>Isso é importante porque…</b> com o CAGED validando exógenas curtas e o INEP fornecendo as longas, o modelo ganha os dois horizontes que explicam demanda: <b>a rotatividade do mês</b> (CAGED) e <b>a formação de ontem</b> (INEP). É o argumento central do projeto — e a razão de as duas EDAs seguirem a mesma metodologia.</div>
+
+<div class="card">
+  <h3>Próximos passos</h3>
+  <div class="passo"><div class="n">1</div><div class="tx"><h3>Materializar o join CINE×CBO em gold</h3><p><b>O que é:</b> a tabela que liga cada campo de formação às ocupações que abastece (notebook 032, dimensões já validadas). <b>Por quê:</b> é a ponte que falta entre esta EDA e a de demanda — sem ela, features de formação chegam ao modelo só por estado e área.</p></div></div>
+  <div class="passo"><div class="n">2</div><div class="tx"><h3>Levar a oferta EaD nacional à gold</h3><p><b>O que é:</b> tabela gold da dimensão 3 (18,6 mi de vagas, hoje só na silver). <b>Por quê:</b> um pedaço enorme da história da formação está invisível à camada analítica.</p></div></div>
+  <div class="passo"><div class="n">3</div><div class="tx"><h3>Criar os de-paras textuais na silver</h3><p><b>O que é:</b> nomes legíveis para tipo_rede (1=pública, 2=privada), grau acadêmico e nível acadêmico. <b>Por quê:</b> hoje análise depende de decoreba de códigos — e a rede privada ≈ 84% das matrículas, leitura relevante invisível.</p></div></div>
+  <div class="passo"><div class="n">4</div><div class="tx"><h3>Ingerir o Censo 2025 quando publicado</h3><p><b>O que é:</b> o quinto ano da série. <b>Por quê:</b> com 4 pontos anuais, STL/ADF/ACF não têm poder estatístico — a EDA é transversal por necessidade; o quinto ano começa a habilitar métodos de série temporal para a formação.</p></div></div>
+</div>
+
+<footer>
+  <b>Fontes e procedência:</b> gold <code>fato_inep_educacao_brasil_anual</code> + <code>fato_inep_educacao_uf_anual</code> (v2) · silver <code>inep_superior_cursos</code> (2,41 mi linhas) · dimensões <code>dim_cine_brasil</code> (372 rótulos) · shares por UF calculados em 02/11/2026.<br>
+  <b>Metodologia:</b> EDA transversal segundo Bussab &amp; Morettin (2010) — detalhes em <code>EDA_Inep.md</code> · contraparte de demanda: <code>dashboard_caged.html</code> · visão integrada: <code>dashboard_unificado_caged_inep.html</code> · DemandA — Fernanda Carnevalle de Melo · 2026
+</footer>
+</div>
+<script>
+function el(id){return document.getElementById(id)}
+function lineChart(id,cats,series,yMin,yMax,yTick,skipFirst){
+  var W=920,H=430,L=64,R=895,T=26,B=378,n=cats.length;
+  var X=function(i){return L+i*(R-L)/(n-1)};var Y=function(v){return T+(B-T)*(1-(v-yMin)/(yMax-yMin))};
+  var s='<svg viewBox="0 0 920 '+H+'">';
+  for(var k=0;k<=4;k++){var v=yMin+(yMax-yMin)*k/4;var gy=Y(v);s+='<line class="grid" x1="'+L+'" x2="'+R+'" y1="'+gy+'" y2="'+gy+'"/><text class="tick" x="'+(L-7)+'" y="'+(gy+4)+'" text-anchor="end">'+yTick(v)+'</text>';}
+  cats.forEach(function(c,i){s+='<text class="tick" x="'+X(i)+'" y="'+(B+18)+'" text-anchor="middle">'+c+'</text>'});
+  series.forEach(function(sr,si){
+    var pts=sr.v.map(function(v,i){return X(i).toFixed(1)+','+Y(v).toFixed(1)}).join(' ');
+    s+='<polyline fill="none" stroke="'+sr.c+'" stroke-width="3" points="'+pts+'"/>';
+    sr.v.forEach(function(v,i){s+='<circle cx="'+X(i).toFixed(1)+'" cy="'+Y(v).toFixed(1)+'" r="4.5" fill="'+sr.c+'"><title>'+sr.n+' — '+cats[i]+': '+v.toFixed(1)+'</title></circle>'});
+    sr.v.forEach(function(v,i){if(skipFirst&&i===0){return;}
+      var dy=(si%2===0)?-9:15;
+      s+='<text x="'+X(i).toFixed(1)+'" y="'+(Y(v)+dy).toFixed(1)+'" text-anchor="middle" style="font-size:11.5px;font-weight:700" fill="'+sr.c+'">'+v.toFixed(1)+'</text>';});
+  });
+  s+='<line x1="'+L+'" x2="'+L+'" y1="'+T+'" y2="'+B+'" stroke="#c8d2dd"/><line x1="'+L+'" x2="'+R+'" y1="'+B+'" y2="'+B+'" stroke="#c8d2dd"/>';
+  s+='</svg>';
+  var lg=series.map(function(sr){return '<span class="chip" style="background:'+sr.c+'"></span>'+sr.n}).join(' ');
+  el(id).innerHTML=s+'<div class="legenda">'+lg+'</div>';
+}
+function barChart(id,cats,vals,yMin,yMax,fmt,color,yTick){
+  var W=920,H=410,L=64,R=895,T=30,B=340,slot=(R-L)/cats.length,bw=Math.min(120,slot*0.55);
+  var Y=function(v){return T+(B-T)*(1-(v-yMin)/(yMax-yMin))};
+  var s='<svg viewBox="0 0 920 '+H+'">';
+  for(var k=0;k<=4;k++){var v=yMin+(yMax-yMin)*k/4;var gy=Y(v);s+='<line class="grid" x1="'+L+'" x2="'+R+'" y1="'+gy+'" y2="'+gy+'"/><text class="tick" x="'+(L-7)+'" y="'+(gy+4)+'" text-anchor="end">'+yTick(v)+'</text>';}
+  cats.forEach(function(c,i){var v=vals[i];var x=L+i*slot+(slot-bw)/2;var yv=Y(v);
+    s+='<rect x="'+x.toFixed(1)+'" y="'+Math.min(yv,B).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+Math.max(0.5,Math.abs(B-yv)).toFixed(1)+'" rx="3" fill="'+(Array.isArray(color)?color[i]:color)+'"><title>'+c+': '+fmt(v)+'</title></rect>';
+    s+='<text class="tick" x="'+(x+bw/2).toFixed(1)+'" y="'+(v>=0?yv-8:yv+22).toFixed(1)+'" text-anchor="middle" style="font-size:15px;font-weight:700" fill="#001236">'+fmt(v)+'</text>';
+    s+='<text class="tick" x="'+(x+bw/2).toFixed(1)+'" y="'+(B+18)+'" text-anchor="middle" style="font-size:12.5px">'+c+'</text>';});
+  s+='</svg>';el(id).innerHTML=s;
+}
+function hbar(id,rows,ref){
+  var rh=50,T=26,L=185,R=890,max=Math.max.apply(null,rows.map(function(r){return r.v}))*1.12,H=T+rows.length*rh+18;
+  var X=function(v){return L+(R-L)*v/max};
+  var s='<svg viewBox="0 0 920 '+H+'">';
+  if(ref){var rx=X(ref);s+='<line x1="'+rx+'" x2="'+rx+'" y1="'+T+'" y2="'+(H-14)+'" stroke="#001236" stroke-dasharray="6 4"/><text x="'+rx+'" y="'+(T-6)+'" text-anchor="middle" font-size="11" fill="#001236">Brasil '+ref+'</text>';} 
+  rows.forEach(function(r,i){var y=T+i*rh+8;var w=X(r.v)-L;
+    s+='<text class="tick" x="'+(L-8)+'" y="'+(y+20)+'" text-anchor="end" style="font-size:14.5px">'+r.n+'</text>';
+    s+='<rect x="'+L+'" y="'+y+'" width="'+w.toFixed(1)+'" height="30" rx="3" fill="'+(r.c||'#001236')+'"><title>'+r.n+': '+r.v+'</title></rect>';
+    s+='<text x="'+(L+w+8).toFixed(1)+'" y="'+(y+21)+'" style="font-size:15px;font-weight:700" fill="#001236">'+(r.f?r.f(r.v):r.v)+'</text>';});
+  s+='</svg>';el(id).innerHTML=s;
+}
+var ANOS=['2021','2022','2023','2024'];
+lineChart('chart-index',ANOS,[
+  {n:'Ingressantes',v:[100,120.6,126.6,127.0],c:'#009999'},
+  {n:'Matrículas',v:[100,105.1,111.0,113.8],c:'#5cc5c5'},
+  {n:'Concluintes',v:[100,97.0,103.6,100.5],c:'#001236'},
+  {n:'Vagas presenciais',v:[100,95.2,91.6,85.4],c:'#D86DCD'}
+],78,135,function(v){return v.toFixed(0)},true);
+hbar('chart-campos',[{n:'Pedagogia',v:887502,c:'#009999',f:function(x){return x.toLocaleString('pt-BR')}},{n:'Direito',v:652996,c:'#009999',f:function(x){return x.toLocaleString('pt-BR')}},{n:'Administração',v:652934,c:'#009999',f:function(x){return x.toLocaleString('pt-BR')}},{n:'Enfermagem',v:478008,c:'#009999',f:function(x){return x.toLocaleString('pt-BR')}},{n:'Sistemas de Informação',v:420280,c:'#009999',f:function(x){return x.toLocaleString('pt-BR')}},{n:'Psicologia',v:375574,c:'#5cc5c5',f:function(x){return x.toLocaleString('pt-BR')}},{n:'Contabilidade',v:322781,c:'#5cc5c5',f:function(x){return x.toLocaleString('pt-BR')}},{n:'Educação Física',v:303816,c:'#5cc5c5',f:function(x){return x.toLocaleString('pt-BR')}}],null);
+barChart('chart-areas',['Saúde','TIC','Sociais/com.','Básicos','Serviços','Educação','Artes','Negócios','Exatas','Agro','Engenharia'],[25.0,15.3,9.1,9.0,7.4,5.9,5.2,4.7,2.2,-2.4,-5.4],-8,30,function(v){return v.toFixed(1).replace('.',',')+'%'},['#009999','#009999','#009999','#009999','#009999','#009999','#009999','#009999','#009999','#D86DCD','#D86DCD'],function(v){return v.toFixed(0)+'%'});
+hbar('chart-uf',[{n:'São Paulo',v:23.9,c:'#D86DCD',f:function(x){return x.toFixed(1).replace('.',',')+'%'}},{n:'Minas Gerais',v:9.3,c:'#009999',f:function(x){return x.toFixed(1).replace('.',',')+'%'}},{n:'Rio de Janeiro',v:9.2,c:'#009999',f:function(x){return x.toFixed(1).replace('.',',')+'%'}},{n:'Paraná',v:7.0,c:'#009999',f:function(x){return x.toFixed(1).replace('.',',')+'%'}},{n:'Rio Grande do Sul',v:5.7,c:'#009999',f:function(x){return x.toFixed(1).replace('.',',')+'%'}},{n:'Bahia',v:4.9,c:'#5cc5c5',f:function(x){return x.toFixed(1).replace('.',',')+'%'}},{n:'Santa Catarina',v:4.5,c:'#5cc5c5',f:function(x){return x.toFixed(1).replace('.',',')+'%'}},{n:'Ceará',v:3.7,c:'#5cc5c5',f:function(x){return x.toFixed(1).replace('.',',')+'%'}}],null);
+lineChart('chart-ead',ANOS,[
+  {n:'Ingressantes EaD (% do total)',v:[62.8,65.1,66.3,66.8],c:'#D86DCD'},
+  {n:'Matrículas EaD (% do estoque)',v:[41.3,45.8,49.2,50.7],c:'#009999'}
+],35,72,function(v){return v.toFixed(0)+'%'},true);
+</script>
+</body>
+</html>
