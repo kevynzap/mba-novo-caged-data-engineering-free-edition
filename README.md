@@ -1,7 +1,7 @@
 # MBA Engenharia de Dados — Previsão de Demanda Profissional e Formação Educacional no Brasil
 
 **Instituição:** Universidade Presbiteriana Mackenzie  
-**Projeto:** Engenharia de Dados aplicada aos microdados do Novo Caged e Educação Formal
+**Projeto:** Engenharia de Dados aplicada aos microdados do Novo Caged (MTE) e do Censo da Educação Superior (INEP)
 
 **Organização do trabalho:** [Trello — MBA | Previsão da Demanda por Ocupações](https://trello.com/b/sts8EjN4)
 
@@ -30,29 +30,9 @@ Desenvolver uma solução de Engenharia de Dados e Machine Learning para analisa
 
 ## Escopo do estudo e limitação de abrangência
 
-A presente iniciativa foi concebida para responder a uma questão de negócio mais ampla: **integrar dados históricos de emprego e educação profissional para apoiar a previsão de admissões por ocupação e região e subsidiar decisões de planejamento da oferta de cursos no Brasil**. Nesse contexto, o objetivo principal do projeto não é constituir um mapeamento universal de todas as profissões existentes no mercado de trabalho brasileiro, nem um catálogo completo das ocupações registradas na CBO, mas **desenvolver uma solução de Engenharia de Dados e Machine Learning capaz de analisar tendências de emprego formal e relacioná-las à oferta de formação profissional**.
+O estudo usa os microdados do **Novo Caged (MTE)** para analisar e prever admissões no emprego formal e os microdados do **Censo da Educação Superior (INEP)**, de 2021 a 2024, para caracterizar a formação na graduação.
 
-Dentro deste contexto, o **estudo de correspondência entre cursos da FATEC e ocupações do CAGED (DE/PARA) representa uma etapa de apoio metodológico e não o objetivo central do projeto**. Ele foi conduzido como um recorte analítico para avaliar a aderência entre formação profissional e demanda de ocupações em um conjunto de dados delimitado. Assim, o mapeamento realizado considera, de forma intencional, apenas:
-
-- Os cursos da FATEC disponíveis no ambiente de trabalho;
-- As ocupações CBO selecionadas como referência dentro do recorte do CAGED 2025;
-- O DE/PARA gerado por similaridade semântica entre curso, eixo tecnológico e descrição da ocupação.
-
-A limitação desse escopo é uma **decisão metodológica e não uma falha do processo**. O projeto não busca cobrir o universo completo de ocupações da CBO, nem afirmar que todos os cursos e profissões existentes no mercado brasileiro foram contemplados. O trabalho foi desenhado como uma solução estratégica para um problema específico, com foco em dados públicos, previsão de admissões e análise de alinhamento entre formação e mercado, e não como um inventário definitivo de todas as relações entre educação e ocupação.
-
-### Por que essa restrição é importante
-
-A relação entre cursos e ocupações não é direta nem unívoca. Muitas profissões não possuem correspondência clara com um curso específico, e muitas ocupações podem ser relacionadas a múltiplos perfis formativos. Por isso, o projeto adota uma **abordagem documental e controlada de correspondência**, registrando relações com maior ou menor grau de similaridade e marcando eventuais ambiguidades, em vez de presumir equivalência direta entre curso e ocupação.
-
-Essa limitação de escopo também segue as práticas de **Lean Six Sigma**, especialmente no contexto do ciclo DMAIC (Define, Measure, Analyze, Improve, Control). Na fase Define, o problema, os objetivos e os limites da análise são explicitados para reduzir ambiguidade, evitar supergeneralização e preservar a validade do estudo. Em termos práticos:
-
-- **Define**: o problema de negócio e o escopo da solução são delimitados;
-- **Measure**: os dados são avaliados no contexto real da base disponível;
-- **Analyze**: a análise se concentra no conjunto de relações que podem ser sustentadas pela metodologia adotada;
-- **Improve**: ações e decisões são orientadas por indicadores e por uma visão controlada do problema;
-- **Control**: o estudo impede conclusões extrapoladas além do contexto e reduz ruído analítico.
-
-A restrição do estudo aos cursos da FATEC e ao subconjunto de ocupações do DE/PARA é uma **escolha consciente de governança do projeto**. Ela não desqualifica o objetivo maior do trabalho, mas organiza a execução em um escopo viável e metodologicamente defensável. O estudo continua sendo relevante ao problema original, pois oferece um mecanismo de apoio para análise de alinhamento entre formação e mercado, mantendo transparência sobre os limites do recorte adotado.
+A integração usa uma [ponte provisória CINE × CBO](notebooks/03_analytics/034_bridge_provisoria_cine_cbo.ipynb), curada pela equipe, que associa áreas específicas de formação a subgrupos ocupacionais. Uma área pode se relacionar a vários subgrupos e vice-versa. A ponte registra a confiança e a justificativa dos pares, e uma tabela de cobertura identifica as áreas sem correspondência.
 
 ## Desenho inicial da arquitetura
 
@@ -309,21 +289,6 @@ Essa correspondência não deve ser presumida como direta: uma formação pode e
 
 A bridge provisória usada pelo ML relaciona áreas específicas CINE a subgrupos CBO. O notebook [034](notebooks/03_analytics/034_bridge_provisoria_cine_cbo.ipynb) materializa essa relação e registra a cobertura.
 
-### DE/PARA FATEC × CBO (2025)
-
-O [notebook DE/PARA](notebooks/02_transformacao/02_de_para_fatec_ocupacoes_cbo.ipynb)
-cruza cursos da FATEC com ocupações CBO candidatas usando similaridade semântica.
-O fluxo requer a tabela de origem `workspace.bronze.cursos_fatec` e grava
-`workspace.silver.cursos_fatec_ocupacoes_cbo_2025`. A
-[especificação do DE/PARA](docs/de-para-fatec-caged-2025-specs.md)
-documenta o resultado de referência, os critérios e as limitações.
-
-Os scripts [EDA.py](notebooks/03_analytics/EDA.py) e
-[04_eda_rigorosa_bussab_moretin.py](notebooks/03_analytics/04_eda_rigorosa_bussab_moretin.py)
-registram duas versões da análise exploratória CAGED/FATEC. Eles dependem de
-`workspace.silver.novo_caged_movimentacoes_semestral`, uma tabela auxiliar cuja
-criação não está versionada no pipeline atual.
-
 ## Modelagem dimensional e Wide Table
 
 A arquitetura Gold contempla dois produtos analíticos complementares.
@@ -339,16 +304,16 @@ As previsões operacionais têm horizonte de 12 meses. As variáveis são constr
 O [dashboard integrado DemandA](docs/eda/dashboard_unificado_caged_inep.html) registra os achados exploratórios do Novo Caged e do Censo da Educação Superior.
 
 - **Emprego e formação em 2024.** O Novo Caged registrou **25,3 milhões de admissões** e o INEP registrou **1,33 milhão de concluintes** da graduação. Entre 2021 e 2024, o saldo formal caiu **41%**. Em 2024, **66,8% dos ingressantes** estavam no EaD.
-- **Relação entre as bases.** A correlação agregada no painel **UF × ano** foi de **0,98** em **108 observações**. A unidade de análise é a UF em cada ano.
+- **Relação entre as bases.** A correlação de Pearson entre admissões do Novo Caged e concluintes do INEP no mesmo ano foi de **0,98**, em **108 observações UF × ano** (27 UFs de 2021 a 2024). A associação reflete em grande parte diferenças de escala entre UFs. [Metodologia da EDA integrada](docs/eda/EDA_Unificada_Inep_Caged.md#41-correlações-n108).
 - **Triagem de variáveis para previsão mensal.** Na série do Caged, as maiores correlações de Pearson com as admissões do mês seguinte foram tendência (**0,70**), desligamentos do mês anterior (**0,69**) e salário do mês anterior (**0,68**). A correlação das admissões defasadas em um mês foi **0,40**. Esses valores medem a associação exploratória de cada variável com o alvo.
 
-O [dashboard de avaliação do modelo](notebooks/03_analytics/EDA%20%281%29/00_EDA_CAGED/dashboard_modelo_admissoes.html) registra o backtest de um mês à frente, em **12 janelas expansivas de jan–dez/2025**. Nas **698 séries UF × subgrupo CBO**, o LightGBM teve **MAE de 21,5 admissões por série-mês** e **RMSE de 72,2**. O baseline sazonal teve MAE de **24,4** e RMSE de **75,9**. O MASE do LightGBM foi de **0,80** nas 20 séries de maior volume e de **1,36** no painel completo, onde o baseline sazonal obteve **1,11**.
+O [notebook de backtest](notebooks/03_analytics/036_treino_backtest_admissoes.ipynb) e o [dashboard de avaliação do modelo](notebooks/03_analytics/EDA%20%281%29/00_EDA_CAGED/dashboard_modelo_admissoes.html) documentam a avaliação da previsão de admissões mensais do Novo Caged para um mês à frente, em **12 janelas expansivas de jan–dez/2025**. Nas **698 séries UF × subgrupo CBO**, o LightGBM teve **MAE de 21,5 admissões por série-mês** e **RMSE de 72,2**. O baseline sazonal teve MAE de **24,4** e RMSE de **75,9**. O MASE do LightGBM foi de **0,80** nas 20 séries de maior volume e de **1,36** no painel completo, onde o baseline sazonal obteve **1,11**.
 
 ## Glossário de dados
 
-A documentação de todas as tabelas das camadas bronze, silver e gold está consolidada em [docs/dicionario_dados/glossario_de_dados.md](docs/dicionario_dados/glossario_de_dados.md), incluindo:
+A documentação das tabelas do Novo Caged e do INEP nas camadas bronze, silver e gold está consolidada em [docs/dicionario_dados/glossario_de_dados.md](docs/dicionario_dados/glossario_de_dados.md), incluindo:
 
-- Propósito, grão e colunas das 37 tabelas do data warehouse (excluindo FATEC), entre elas as bridges CINE × CBO e as tabelas de Machine Learning.
+- Propósito, grão e colunas das tabelas do projeto, entre elas as bridges CINE × CBO e as tabelas de Machine Learning.
 - Contexto de negócios das fontes oficiais (Novo CAGED/MTE e Censo da Educação Superior/INEP).
 - Verificação dos contextos contra os dados do workspace (executada em 31/10/2026).
 - Chaves de junção recomendadas entre fatos, dimensões e dicionários de referência.
