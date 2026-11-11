@@ -9,7 +9,7 @@ Atualizado em 11/11/2026. O projeto usa Databricks Free Edition e arquitetura Me
 | Novo Caged | Ingestão e transformação versionadas. A fato Gold semestral foi validada no workspace em 31/10/2026 e cobre 2021S1–2026S1. |
 | INEP | Censos de 2021 a 2024 processados em Bronze, Silver e Gold. As fatos Gold são anuais, com granularidade por rótulo CINE e recortes Brasil e UF. |
 | Dimensões e correspondência CINE × CBO | Dimensões versionadas. A [bridge provisória](../../notebooks/03_analytics/034_bridge_provisoria_cine_cbo.ipynb) materializa a relação entre área específica CINE e subgrupo CBO e registra sua cobertura. |
-| EDA | Dashboard integrado publicado no repositório. Os [resultados](../../README.md#resultados-de-eda-e-machine-learning) estão resumidos no README. |
+| EDA | [Dashboard integrado](../eda/dashboard_unificado_caged_inep.html) com indicadores de emprego formal do Novo Caged e de graduação do Censo da Educação Superior do INEP. Os [resultados exploratórios](../../README.md#resultados-de-eda-e-machine-learning) estão resumidos no README. |
 | Machine Learning | Wide Table mensal por competência × UF × subgrupo CBO, [backtest](../../notebooks/03_analytics/036_treino_backtest_admissoes.ipynb), previsões versionadas e análise de desalinhamento documentados no [glossário](../dicionario_dados/glossario_de_dados.md). |
 | CI/CD | Validação automatizada e deploy do bundle em `dev` comprovados pelas execuções abaixo. A homologação operacional dos Jobs ponta a ponta segue pendente. |
 
