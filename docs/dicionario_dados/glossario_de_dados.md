@@ -2,7 +2,7 @@
 
 **Catálogo:** `workspace` · 
 
-**Escopo:** todas as tabelas das camadas `bronze`, `silver` e `gold`, exceto tabelas FATEC (`cursos_fatec`, `cursos_fatec_ocupacoes_cbo_2025`).
+**Escopo:** tabelas do Novo Caged e do Censo da Educação Superior do INEP nas camadas `bronze`, `silver` e `gold`, incluindo a ponte CINE × CBO e as tabelas de Machine Learning.
 
 **Fontes oficiais:**
 
@@ -82,7 +82,7 @@ O projeto conecta **oferta educacional** (Censo INEP: ingressantes/concluintes p
 * Usar salário mediano de admissão (CAGED) como retorno médio ao mercado formal por ocupação, contrastando entre áreas de formação.
 * Recortes por UF para identificar desequilíbrios regionais de oferta/absorção.
 
-> As tabelas FATEC (`cursos_fatec`, `cursos_fatec_ocupacoes_cbo_2025`) fora do escopo deste glossário fazem exatamente essa ponte no nível curso×ocupação. Na camada gold, a ponte CINE × CBO é materializada — em versão provisória, curada pela equipe e pendente de correspondência oficial do MEC — pelas tabelas `bridge_cine_cbo_provisoria` e `bridge_cine_cbo_provisoria_cobertura` (seções 3.6 e 3.7).
+> Na camada gold, a ponte CINE × CBO é materializada — em versão provisória, curada pela equipe e pendente de correspondência oficial do MEC — pelas tabelas `bridge_cine_cbo_provisoria` e `bridge_cine_cbo_provisoria_cobertura` (seções 3.6 e 3.7).
 
 ## Verificação dos contextos com os dados (executada em 31/10/2026)
 
