@@ -52,6 +52,7 @@ A arquitetura considera os requisitos de Lambda, Star Schema, Wide Table, CI/CD 
 ### Diagrama da arquitetura
 
 <img width="1672" height="941" alt="image" src="https://github.com/user-attachments/assets/1f376c30-fae9-4150-bc0f-22bad81c13d1" />
+
 A validação autenticada do Bundle no CI depende das credenciais do workspace. O deploy usa o commit aprovado pelo CI. As [evidências de CI/CD e o status da homologação operacional](docs/status_entregas/arquitetura-pipelines-inep-caged.md#arquitetura-de-cicd) estão na documentação de entregas.
 
 ## Arquitetura técnica
@@ -87,11 +88,10 @@ Na Free Edition, o projeto utiliza o catálogo `workspace`, com schemas `bronze`
 ```text
 mba-novo-caged-data-engineering-free-edition/
 │
-├── README.md
-├── .github/workflows/
-├── databricks.yml
-├── resources/
-├── job-settings-novo-caged.json
+├── .github/
+│   ├── workflows/
+│   │   ├── cd_databricks_dev.yml
+│   │   └── ci_validacao_aut_repo.yml
 │
 ├── docs/
 │   ├── dicionario_dados
@@ -101,7 +101,10 @@ mba-novo-caged-data-engineering-free-edition/
 │   │   └── dashboard_unificado_caged_inep.html
 │   └── status_entregas/
 │       └── arquitetura-pipelines-inep-caged.md
-│
+|
+├── infrastructure/
+|    └── terraform/
+|
 ├── notebooks/
 │   ├── 00_setup/
 │   │   ├── 01_create_catolog_schema.ipynb
@@ -134,13 +137,22 @@ mba-novo-caged-data-engineering-free-edition/
 │       ├── 038_desalinhamento_formacao_mercado.ipynb
 │       └── EDA.ipynb
 │
+├── resources/
+│   └── job_caged.yml
+│   └── job_inep.yml
+│   └── job_ml.yml
+│
 ├── src/
 │   └── transformations/
 │
 ├── tests/
+│   └── test_bundle_resources.py
+│   └── test_data_quality_rules.py
+│   └── test_pipeline_contracts.py
 │
-└── infrastructure/
-    └── terraform/
+├── README.md
+├── databricks.yml
+├── job-settings-novo-caged.json
 ```
 
 `tests/` contém testes automatizados executados pelo CI, incluindo contratos do pipeline, regras de qualidade e recursos do bundle. `src/transformations/` e `infrastructure/terraform/` contêm arquivos iniciais de preparação.
