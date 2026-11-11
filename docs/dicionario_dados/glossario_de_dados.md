@@ -1,6 +1,8 @@
 # Glossário de Dados — Novo CAGED & Censo da Educação Superior (INEP)
 
-**Catálogo:** `workspace` · **Escopo:** todas as tabelas das camadas `bronze`, `silver` e `gold`, exceto tabelas FATEC (`cursos_fatec`, `cursos_fatec_ocupacoes_cbo_2025`).
+**Catálogo:** `workspace` · 
+
+**Escopo:** todas as tabelas das camadas `bronze`, `silver` e `gold`, exceto tabelas FATEC (`cursos_fatec`, `cursos_fatec_ocupacoes_cbo_2025`).
 
 **Fontes oficiais:**
 
