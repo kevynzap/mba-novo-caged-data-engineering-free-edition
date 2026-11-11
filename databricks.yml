@@ -4,6 +4,12 @@ bundle:
 include:
   - resources/*.yml
 
+# Evita conflito de nomes remotos: EDA.py e EDA.ipynb viram /EDA.
+# Mantemos ambos no Git; somente o notebook .ipynb e sincronizado.
+sync:
+  exclude:
+    - notebooks/03_analytics/EDA.py
+
 targets:
   dev:
     mode: development

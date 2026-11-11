@@ -59,7 +59,7 @@ jobs:
       # Na ausencia delas, os testes Pytest continuam validando YAML e caminhos.
       - name: Install Databricks CLI
         if: ${{ env.DATABRICKS_HOST != '' && env.DATABRICKS_TOKEN != '' }}
-        uses: databricks/setup-cli@v1.23.0
+        uses: databricks/setup-cli@v1.24.0
 
       - name: Validate Databricks Bundle (authenticated)
         if: ${{ env.DATABRICKS_HOST != '' && env.DATABRICKS_TOKEN != '' }}
