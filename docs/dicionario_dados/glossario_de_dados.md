@@ -189,7 +189,7 @@ As afirmações abaixo foram confrontadas com os dados reais das tabelas (o text
 **Descrição:** Movimentações do Novo CAGED tipadas e enriquecidas com descrições (de-para com os dicionários `ref_*`). Grão: uma linha por movimentação. Fonte: `workspace.bronze.novo_caged_movimentacoes`. Clusterizada por `competencia_mov`.
 
 | Grupo | Colunas | Descrição |
-| --- | --- |
+| --- | --- |--- |
 | Temporal | `competencia_mov` (date), `competencia_dec` (date) | Competência da movimentação e competência declarada |
 | Geografia | `regiao` (smallint) + `regiao_descricao`, `uf` (smallint) + `uf_descricao`, `municipio` (int) + `municipio_descricao` | Códigos e nomes de região, UF e município |
 | Atividade econômica | `secao` (string) + `secao_descricao`, `subclasse` (int) + `subclasse_descricao` | Seção e subclasse CNAE |
