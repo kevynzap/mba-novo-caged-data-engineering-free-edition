@@ -1,0 +1,53 @@
+name: CD - Databricks Bundle (dev)
+
+on:
+  workflow_run:
+    workflows: ["CI - MBA Data Engineering"]
+    types: [completed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: databricks-bundle-dev
+  cancel-in-progress: false
+
+jobs:
+  deploy-dev:
+    name: Deploy Databricks Bundle to dev
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.event == 'push'
+    runs-on: ubuntu-latest
+    environment: dev
+    env:
+      DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
+      DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+
+    steps:
+      - name: Checkout the exact validated main commit
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+
+      - name: Check Databricks configuration
+        shell: bash
+        run: |
+          if [[ -z "${DATABRICKS_HOST}" || -z "${DATABRICKS_TOKEN}" ]]; then
+            echo 'DATABRICKS_HOST variable and DATABRICKS_TOKEN secret are required.' >&2
+            exit 1
+          fi
+
+      - name: Install Databricks CLI
+        uses: databricks/setup-cli@v1.23.0
+
+      - name: Validate bundle
+        run: databricks bundle validate -t dev
+
+      - name: Deploy bundle (no job execution)
+        run: databricks bundle deploy -t dev --auto-approve --fail-on-active-runs
+
+      # No 'databricks bundle run' step by design.
+      # Data pipelines are executed separately by authorized operators.
