@@ -1,0 +1,55 @@
+resources:
+  jobs:
+    job_ml:
+      name: "MBA - Caged + INEP - Pipeline ML"
+      max_concurrent_runs: 1
+
+      # Este job orquestra os jobs de origem antes de executar a camada ML.
+      # Executar job_ml tambem inicia os dois jobs de origem.
+      tasks:
+        - task_key: atualizar_caged
+          run_job_task:
+            job_id: ${resources.jobs.job_caged.id}
+
+        - task_key: atualizar_inep
+          run_job_task:
+            job_id: ${resources.jobs.job_inep.id}
+
+        - task_key: gerar_features_ml
+          depends_on:
+            - task_key: atualizar_caged
+            - task_key: atualizar_inep
+          notebook_task:
+            notebook_path: ../notebooks/03_analytics/035_gold_ml_features.ipynb
+            base_parameters:
+              versao_transformacao: "0.1.0"
+              tabela_features: "workspace.gold.ml_features_mensal_uf_cbo"
+              tabela_bridge: "workspace.gold.bridge_cine_cbo_provisoria"
+
+        - task_key: gerar_previsoes
+          depends_on:
+            - task_key: gerar_features_ml
+          notebook_task:
+            notebook_path: ../notebooks/03_analytics/037_previsoes_operacionais.ipynb
+            base_parameters:
+              tabela_features: "workspace.gold.ml_features_mensal_uf_cbo"
+              versao_transformacao: "0.1.0"
+              tabela_previsoes: "workspace.gold.previsoes_admissoes"
+              versao_previsao: "0.1.0"
+              horizonte: "12"
+              model_uri: "models:/workspace.gold.demanda_admissoes_lgbm/1"
+
+        - task_key: analisar_desalinhamento
+          depends_on:
+            - task_key: gerar_previsoes
+          notebook_task:
+            notebook_path: ../notebooks/03_analytics/038_desalinhamento_formacao_mercado.ipynb
+            base_parameters:
+              tabela_previsoes: "workspace.gold.previsoes_admissoes"
+              versao_previsao: "0.1.0"
+              tabela_features: "workspace.gold.ml_features_mensal_uf_cbo"
+              tabela_saida: "workspace.gold.desalinhamento_formacao_mercado"
+              versao_analise: "0.1.0"
+              fato_inep: "workspace.gold.fato_inep_educacao_uf_anual"
+              tabela_bridge: "workspace.gold.bridge_cine_cbo_provisoria"
+              ano_censo: "2024"
