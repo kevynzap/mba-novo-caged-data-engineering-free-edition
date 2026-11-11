@@ -1,5 +1,7 @@
 # DE/PARA: Cursos FATEC × Ocupações CBO 2025
 
+> **Registro histórico.** Este experimento está fora do escopo dos pipelines, da EDA integrada e dos resultados do DemandA. A integração em uso no projeto está descrita no [README](../README.md#integração-com-educação-formal).
+
 ## Resumo Executivo
 
 Tabela de correspondência entre **116 cursos da FATEC** e **33 ocupações CBO** selecionadas, mapeadas por similaridade semântica com base nas movimentações formais do CAGED 2025.
@@ -14,9 +16,7 @@ Tabela de correspondência entre **116 cursos da FATEC** e **33 ocupações CBO*
 
 ## Objetivo e Contexto
 
-Este DE/PARA é uma etapa analítica dentro de um projeto maior de previsão de demanda de trabalho e formação profissional. Ele não busca mapear todas as profissões do mercado brasileiro, mas oferecer um mecanismo controlado de correspondência entre ofertas de cursos técnicos (FATEC) e demanda de ocupações (CAGED).
-
-Para entender melhor o escopo e as limitações deste estudo, consulte a seção **"Escopo do estudo e limitação de abrangência"** no [README.md](../README.md#escopo-do-estudo-e-limitação-de-abrangência).
+O experimento explorava a similaridade entre a descrição dos cursos e a de um subconjunto de ocupações CBO de 2025.
 
 ---
 
