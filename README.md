@@ -5,8 +5,9 @@
 
 **Organização do trabalho:** [Trello — MBA | Previsão da Demanda por Ocupações](https://trello.com/b/sts8EjN4)
 
-**Documentação Status Projeto:** docs/status_entregas  
-**Glossário de dados:** docs/dicionario_dados/glossario_de_dados.md
+**Status das entregas:** [arquitetura dos pipelines e evidências de CI/CD](docs/status_entregas/arquitetura-pipelines-inep-caged.md)
+
+**Glossário de dados:** [glossário de dados](docs/dicionario_dados/glossario_de_dados.md)
 
 ## Problema de negócio
 
@@ -85,9 +86,9 @@ A arquitetura considera os requisitos de Lambda, Star Schema, Wide Table, CI/CD 
 | Machine Learning | Python / scikit-learn e bibliotecas compatíveis | Treinamento e avaliação dos modelos |
 | BI | Power BI | Visualização dos indicadores e resultados |
 | Versionamento | Git / GitHub | Histórico e colaboração no código |
-| CI/CD | GitHub Actions — planejado | Testes e automação das entregas |
+| CI/CD | GitHub Actions e Databricks Declarative Automation Bundles | Validação do repositório e deploy em `dev` |
 | IaC | Terraform — planejado | Definição versionada dos recursos suportados |
-| Qualidade | Validações PySpark; pytest planejado | Verificação da integridade dos dados e do código |
+| Qualidade | Validações PySpark e pytest | Verificação da integridade dos dados e do código |
 | Gestão | Trello | Organização das atividades e acompanhamento das entregas |
 
 ### Ambientes de desenvolvimento
@@ -106,20 +107,24 @@ Na Free Edition, o projeto utiliza o catálogo `workspace`, com schemas `bronze`
 mba-novo-caged-data-engineering-free-edition/
 │
 ├── README.md
+├── .github/workflows/
+├── databricks.yml
+├── resources/
 ├── job-settings-novo-caged.json
 │
 ├── docs/
 │   ├── dicionario_dados
 │   │   ├── dicionario-dados-novo-caged-movimentacao.xlsx
 │   │   └── glossario_de_dados.md
-│   │ 
-│   └── status_entrega
-│   │   ├── arquitetura-pipelines-inep-caged.md
+│   ├── eda/
+│   │   └── dashboard_unificado_caged_inep.html
+│   └── status_entregas/
+│       └── arquitetura-pipelines-inep-caged.md
 │
 ├── notebooks/
 │   ├── 00_setup/
 │   │   ├── 01_create_catolog_schema.ipynb
-│   │   └── 02_commom_functions.ipynb
+│   │   └── 02_commom_functions.py
 │   │
 │   ├── 01_ingestao/
 │   │   ├── 010_verificar_novos_arquivos_caged.ipynb
@@ -141,6 +146,11 @@ mba-novo-caged-data-engineering-free-edition/
 │       ├── 0311_silver_to_gold_inep_analise.ipynb
 │       ├── 032_mapeamento_cine_cbo.ipynb
 │       ├── 033_construcao_bridge_cine_cbo.ipynb
+│       ├── 034_bridge_provisoria_cine_cbo.ipynb
+│       ├── 035_gold_ml_features.ipynb
+│       ├── 036_treino_backtest_admissoes.ipynb
+│       ├── 037_previsoes_operacionais.ipynb
+│       ├── 038_desalinhamento_formacao_mercado.ipynb
 │       └── EDA.ipynb
 │
 ├── src/
@@ -152,7 +162,7 @@ mba-novo-caged-data-engineering-free-edition/
     └── terraform/
 ```
 
-Os diretórios `src/transformations`, `tests` e `infrastructure/terraform` possuem arquivos iniciais de preparação, mas ainda não representam implementações completas de módulos reutilizáveis, testes automatizados ou infraestrutura Terraform.
+`tests/` contém testes automatizados executados pelo CI, incluindo contratos do pipeline, regras de qualidade e recursos do bundle. `src/transformations/` e `infrastructure/terraform/` contêm arquivos iniciais de preparação.
 
 ## Desenvolvimento das camadas de dados
 
@@ -283,7 +293,7 @@ O notebook `0311_silver_to_gold_inep_analise.ipynb` registra as validações da 
 
 **Cobertura:** Censos de 2021 a 2024.
 
-**Correspondência CINE × CBO:** os notebooks `032_mapeamento_cine_cbo.ipynb` e `033_construcao_bridge_cine_cbo.ipynb` constroem a ponte entre as áreas de formação (CINE) e as ocupações do mercado formal (CBO 2002), materializada nas tabelas gold `bridge_cine_cbo_provisoria` (pares área específica × subgrupo CBO, com confiança e justificativa) e `bridge_cine_cbo_provisoria_cobertura` (diagnóstico de cobertura), viabilizando a integração com a fato do Caged.
+**Correspondência CINE × CBO:** os notebooks `032_mapeamento_cine_cbo.ipynb`, `033_construcao_bridge_cine_cbo.ipynb` e `034_bridge_provisoria_cine_cbo.ipynb` documentam e constroem a ponte entre as áreas de formação (CINE) e as ocupações do mercado formal (CBO 2002), materializada nas tabelas gold `bridge_cine_cbo_provisoria` (pares área específica × subgrupo CBO, com confiança e justificativa) e `bridge_cine_cbo_provisoria_cobertura` (diagnóstico de cobertura), viabilizando a integração com a fato do Caged.
 
 A documentação detalhada de todas as tabelas está no [glossário de dados](docs/dicionario_dados/glossario_de_dados.md).
 
@@ -297,7 +307,7 @@ Um desafio metodológico é relacionar classificações de cursos ou áreas de f
 
 Essa correspondência não deve ser presumida como direta: uma formação pode estar associada a várias ocupações, e uma ocupação pode reunir profissionais de diferentes formações.
 
-A correspondência é construída pelos notebooks `032_mapeamento_cine_cbo.ipynb` e `033_construcao_bridge_cine_cbo.ipynb`, que implementam a bridge CINE × CBO no nível de rótulo, evitando multiplicações indevidas nas medidas agregadas.
+A bridge provisória usada pelo ML relaciona áreas específicas CINE a subgrupos CBO. O notebook [034](notebooks/03_analytics/034_bridge_provisoria_cine_cbo.ipynb) materializa essa relação e registra a cobertura.
 
 ### DE/PARA FATEC × CBO (2025)
 
@@ -316,15 +326,23 @@ criação não está versionada no pipeline atual.
 
 ## Modelagem dimensional e Wide Table
 
-A arquitetura Gold deverá contemplar dois produtos analíticos complementares:
+A arquitetura Gold contempla dois produtos analíticos complementares.
 
 **Modelo dimensional (Star Schema):** organização das fatos e dimensões para análise histórica de admissões, desligamentos, ocupações, regiões e indicadores educacionais. Já implementadas na Gold: `dim_cbo_ocupacao`, `dim_cine_brasil`, `fato_caged_semestral`, `fato_inep_educacao_brasil_anual`, `fato_inep_educacao_uf_anual`, `bridge_cine_cbo_provisoria` e `bridge_cine_cbo_provisoria_cobertura`.
 
 **Wide Table para Machine Learning:** consolidação das variáveis necessárias à previsão, respeitando a compatibilidade entre granularidades e a disponibilidade temporal das fontes. Implementada na Gold como `ml_features_mensal_uf_cbo` (grão mensal: competência × UF × subgrupo CBO), com suporte a: triagem estatística de features (`ml_features_ols_screening`, OLS com efeitos fixos de UF e mês), backtest por cutoffs móveis (`ml_backtest_admissoes`) e previsões versionadas (`previsoes_admissoes`, horizonte set/2026–ago/2027).
 
-A proposta atual considera a previsão de admissões para um semestre futuro, utilizando indicadores históricos de emprego e educação. A definição final das variáveis explicativas, do horizonte de previsão e da granularidade ocupacional será realizada em conjunto com a equipe responsável pelo Machine Learning.
+As previsões operacionais têm horizonte de 12 meses. As variáveis são construídas com informações disponíveis na data de corte para evitar vazamento temporal.
 
-Para evitar *data leakage*, cada observação deverá utilizar apenas informações disponíveis no momento em que a previsão seria realizada.
+## Resultados de EDA e Machine Learning
+
+O [dashboard integrado DemandA](docs/eda/dashboard_unificado_caged_inep.html) registra os achados exploratórios do Novo Caged e do Censo da Educação Superior.
+
+- **Emprego e formação em 2024.** O Novo Caged registrou **25,3 milhões de admissões** e o INEP registrou **1,33 milhão de concluintes** da graduação. Entre 2021 e 2024, o saldo formal caiu **41%**. Em 2024, **66,8% dos ingressantes** estavam no EaD.
+- **Relação entre as bases.** A correlação agregada no painel **UF × ano** foi de **0,98** em **108 observações**. A unidade de análise é a UF em cada ano.
+- **Triagem de variáveis para previsão mensal.** Na série do Caged, as maiores correlações de Pearson com as admissões do mês seguinte foram tendência (**0,70**), desligamentos do mês anterior (**0,69**) e salário do mês anterior (**0,68**). A correlação das admissões defasadas em um mês foi **0,40**. Esses valores medem a associação exploratória de cada variável com o alvo.
+
+O [dashboard de avaliação do modelo](notebooks/03_analytics/EDA%20%281%29/00_EDA_CAGED/dashboard_modelo_admissoes.html) registra o backtest de um mês à frente, em **12 janelas expansivas de jan–dez/2025**. Nas **698 séries UF × subgrupo CBO**, o LightGBM teve **MAE de 21,5 admissões por série-mês** e **RMSE de 72,2**. O baseline sazonal teve MAE de **24,4** e RMSE de **75,9**. O MASE do LightGBM foi de **0,80** nas 20 séries de maior volume e de **1,36** no painel completo, onde o baseline sazonal obteve **1,11**.
 
 ## Glossário de dados
 
@@ -337,36 +355,18 @@ A documentação de todas as tabelas das camadas bronze, silver e gold está con
 
 ## Orquestração e automação
 
-O repositório contém o arquivo `job-settings-novo-caged.json`, que descreve um fluxo de tarefas para identificação de novos arquivos, ingestão e transformação dos dados.
+Os Databricks Jobs são definidos nos YAMLs de [`resources/`](resources/), incluídos pelo [`databricks.yml`](databricks.yml). O status das entregas, no início deste README, reúne as dependências dos Jobs e as evidências aprovadas.
 
-A configuração está versionada, porém seus caminhos de notebooks precisam ser revisados para refletir a organização atual do repositório, e sua execução operacional deve ser validada no workspace.
+### CI/CD
 
-### CI/CD e infraestrutura como código
-
-A implementação de testes automatizados, pipelines GitHub Actions e infraestrutura como código está planejada.
-
-As próximas atividades incluem:
-
-- Extração de regras de transformação reutilizáveis.
-- Testes automatizados de qualidade e integridade.
-- Integração contínua com GitHub Actions.
-- Avaliação de Databricks Declarative Automation Bundles.
-- Definição de recursos de infraestrutura por Terraform, respeitando as limitações da Free Edition.
+O GitHub Actions valida mudanças destinadas à `main`. Após um push à `main` com CI aprovado, o CD implanta o bundle em `dev` a partir do commit validado. A execução dos Databricks Jobs é uma operação separada.
 
 ## Limitações e próximos passos
 
-As principais atividades pendentes são:
-
-1. Homologar a fato Gold semestral e documentar os resultados das validações (validações executadas em 31/10/2026 e registradas no glossário de dados).
-2. Revisar a estratégia incremental para identificar alterações em competências já ingeridas, inclusive quando suas contagens não mudarem.
-3. Atualizar e validar a configuração dos Databricks Jobs.
-4. Ingerir e analisar a base de educação formal (Concluído: Censo da Educação Superior 2021–2024 nas camadas bronze, silver e gold).
-5. Definir a correspondência entre cursos, áreas de formação e ocupações (Concluído: notebooks 032 e 033, bridge CINE × CBO).
-6. Implementar a Wide Table para Machine Learning (Concluído: `ml_features_mensal_uf_cbo`, com triagem e backtest).
-7. Desenvolver, treinar e avaliar os modelos preditivos (previsões geradas em 08/11/2026 em `previsoes_admissoes`; análise de desalinhamento em `desalinhamento_formacao_mercado`).
-8. Construir as visualizações e o dashboard.
-9. Implementar testes automatizados, CI/CD e IaC.
-10. Documentar como os requisitos de arquitetura Lambda e streaming serão atendidos ou demonstrados no escopo acadêmico.
+1. Validar a execução ponta a ponta dos Jobs no workspace e registrar as evidências operacionais.
+2. Revisar a estratégia incremental para identificar alterações em competências já ingeridas, inclusive quando suas contagens forem mantidas.
+3. Avaliar a validação das Golds INEP contra as Sinopses Estatísticas oficiais e a cobertura da bridge provisória CINE × CBO.
+4. Avaliar o escopo de Terraform e da demonstração de Lambda e streaming na Free Edition.
 
 ### Limitações metodológicas
 
