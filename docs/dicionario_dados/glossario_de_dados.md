@@ -364,7 +364,7 @@ As afirmações abaixo foram confrontadas com os dados reais das tabelas (o text
 
 ## 3.8 `workspace.gold.ml_features_mensal_uf_cbo`
 
-**Descrição:** Wide Table (tabela de features) para Machine Learning — a consolidação mensal prevista na arquitetura. Grão: **competência (mês) × UF × subgrupo principal CBO (3 dígitos)**, cobrindo somente subgrupos presentes na bridge. Variável-alvo: `admissoes` (admissões do mês). Cobertura: jan/2021–ago/2026. Features educacionais defasadas 1 a 5 anos (def1–def5) para respeitar o tempo de formação e evitar *data leakage*.
+**Descrição:** Wide Table (tabela de features) para Machine Learning — a consolidação mensal prevista na arquitetura. Grão: **competência (mês) × UF × subgrupo principal CBO (3 dígitos)**, cobrindo somente subgrupos presentes na bridge. Variável-alvo: `admissoes` (admissões do mês). Cobertura: jan/2021–ago/2026. Features educacionais defasadas 1 a 5 anos (def1–def5) para respeitar o tempo de formação e evitar *data leakage*. Construída pelo notebook `035_gold_ml_features`.
 
 | Família | Colunas | Descrição |
 | --- | --- | --- |
@@ -378,7 +378,7 @@ As afirmações abaixo foram confrontadas com os dados reais das tabelas (o text
 
 ## 3.9 `workspace.gold.ml_features_ols_screening`
 
-**Descrição:** Triagem estatística das features candidatas da Wide Table via regressão OLS *pooled* com efeitos fixos de UF e mês. Grão: uma linha por feature avaliada. Suporta a decisão de quais variáveis entram no modelo final.
+**Descrição:** Triagem estatística das features candidatas da Wide Table via regressão OLS *pooled* com efeitos fixos de UF e mês. Grão: uma linha por feature avaliada. Suporta a decisão de quais variáveis entram no modelo final. Também produzida pelo notebook `035_gold_ml_features`.
 
 | Coluna | Tipo | Descrição |
 | --- | --- | --- |
@@ -393,7 +393,7 @@ As afirmações abaixo foram confrontadas com os dados reais das tabelas (o text
 
 ## 3.10 `workspace.gold.ml_backtest_admissoes`
 
-**Descrição:** Métricas de backtest dos modelos preditivos, com validação por cutoffs móveis (jan–dez/2025). Grão: nível × escopo × modelo × cutoff. O nível `GERAL` agrega o holdout (`competencia_mov` nula); `FOLD` traz a métrica de um cutoff. O escopo separa `TODAS_SERIES` (todas as UF×subgrupo) de `AMOSTRA_SARIMAX` (amostra avaliada também com SARIMAX).
+**Descrição:** Métricas de backtest dos modelos preditivos, com validação por cutoffs móveis (jan–dez/2025). Grão: nível × escopo × modelo × cutoff. O nível `GERAL` agrega o holdout (`competencia_mov` nula); `FOLD` traz a métrica de um cutoff. O escopo separa `TODAS_SERIES` (todas as UF×subgrupo) de `AMOSTRA_SARIMAX` (amostra avaliada também com SARIMAX). Construída pelo notebook `036_treino_backtest_admissoes`.
 
 | Coluna | Tipo | Descrição |
 | --- | --- | --- |
@@ -408,7 +408,7 @@ As afirmações abaixo foram confrontadas com os dados reais das tabelas (o text
 
 ## 3.11 `workspace.gold.previsoes_admissoes`
 
-**Descrição:** Previsões de admissões por UF × subgrupo CBO para horizontes futuros (set/2026–ago/2027), geradas a partir do último mês real disponível (ago/2026). Grão: UF × subgrupo CBO × competência prevista × modelo. `previsao_admissoes` é o valor pós-ajuste e `previsao_bruta` o valor original do modelo — a diferença indica calibração aplicada.
+**Descrição:** Previsões de admissões por UF × subgrupo CBO para horizontes futuros (set/2026–ago/2027), geradas a partir do último mês real disponível (ago/2026). Grão: UF × subgrupo CBO × competência prevista × modelo. `previsao_admissoes` é o valor pós-ajuste e `previsao_bruta` o valor original do modelo — a diferença indica calibração aplicada. Construída pelo notebook `037_previsoes_operacionais`.
 
 | Coluna | Tipo | Descrição |
 | --- | --- | --- |
@@ -422,7 +422,7 @@ As afirmações abaixo foram confrontadas com os dados reais das tabelas (o text
 
 ## 3.12 `workspace.gold.desalinhamento_formacao_mercado`
 
-**Descrição:** Análise de desalinhamento entre formação e mercado: compara, por UF × subgrupo CBO, a previsão de admissões dos próximos 12 meses com os concluintes e matrículas do Censo INEP (via bridge CINE × CBO). Materializa a resposta analítica central do projeto — onde a oferta de formação está descolada da demanda prevista do mercado formal.
+**Descrição:** Análise de desalinhamento entre formação e mercado: compara, por UF × subgrupo CBO, a previsão de admissões dos próximos 12 meses com os concluintes e matrículas do Censo INEP (via bridge CINE × CBO). Materializa a resposta analítica central do projeto — onde a oferta de formação está descolada da demanda prevista do mercado formal. Construída pelo notebook `038_desalinhamento_formacao_mercado`.
 
 | Coluna | Tipo | Descrição |
 | --- | --- | --- |
