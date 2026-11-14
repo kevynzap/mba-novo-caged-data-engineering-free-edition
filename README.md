@@ -9,6 +9,8 @@
 
 **Glossário de dados:** [glossário de dados](docs/dicionario_dados/glossario_de_dados.md)
 
+**Dashboard do produto:** [Relatório Mensal — Formação × Mercado de Trabalho](docs/relatorios/Relatorio_Mensal_Formacao_Mercado.html) — mapa, previsões e diagnóstico de desalinhamento com glossário interativo
+
 ## Problema de negócio
 
 Instituições de ensino, organizações de formação profissional e gestores públicos precisam planejar a oferta de cursos diante das mudanças no mercado de trabalho, mas os indicadores de emprego e educação estão distribuídos em fontes e metodologias diferentes e possuem frequências de atualização distintas.
@@ -99,6 +101,8 @@ mba-novo-caged-data-engineering-free-edition/
 │   │   └── glossario_de_dados.md
 │   ├── eda/
 │   │   └── dashboard_unificado_caged_inep.html
+│   ├── relatorios/
+│   │   └── Relatorio_Mensal_Formacao_Mercado.html
 │   └── status_entregas/
 │       └── arquitetura-pipelines-inep-caged.md
 |
@@ -315,6 +319,8 @@ As previsões operacionais têm horizonte de 12 meses. As variáveis são constr
 ## Resultados de EDA e Machine Learning
 
 O [dashboard integrado DemandA](docs/eda/dashboard_unificado_caged_inep.html) registra os achados exploratórios do Novo Caged e do Censo da Educação Superior.
+
+O [Relatório Mensal — Formação × Mercado de Trabalho](docs/relatorios/Relatorio_Mensal_Formacao_Mercado.html) é o dashboard de produto para instituições de ensino: mapa do Brasil com previsões de 12 meses, diagnóstico de desalinhamento formação × demanda e glossário interativo, com os dados das tabelas gold embutidos no próprio arquivo HTML.
 
 - **Emprego e formação em 2024.** O Novo Caged registrou **25,3 milhões de admissões** e o INEP registrou **1,33 milhão de concluintes** da graduação. Entre 2021 e 2024, o saldo formal caiu **41%**. Em 2024, **66,8% dos ingressantes** estavam no EaD.
 - **Relação entre as bases.** A correlação de Pearson entre admissões do Novo Caged e concluintes do INEP no mesmo ano foi de **0,98**, em **108 observações UF × ano** (27 UFs de 2021 a 2024). A associação reflete em grande parte diferenças de escala entre UFs. [Metodologia da EDA integrada](docs/eda/EDA_Unificada_Inep_Caged.md#41-correlações-n108).
